@@ -3,14 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MLB 球員資料庫</title>
+    <title id="pageTitle">MLB 球員資料庫 | MLB Player Database</title>
     <style>
+        /* 深色模式變數 (預設) */
+        :root {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --tab-bg: #2d2d2d;
+            --tab-text: #b0b0b0;
+            --tab-active-bg: #34495e;
+            --tab-active-text: #ffffff;
+            --input-bg: #2d2d2d;
+            --input-border: #444444;
+            --input-text: #ffffff;
+            --table-border: #333333;
+            --table-row-even: #1a1a1a;
+            --table-row-hover: #2a2a2a;
+            --header-batter: #b33939;
+            --header-pitcher: #2980b9;
+            --btn-back-bg: #27ae60;
+            --btn-back-hover: #219150;
+        }
+
+        /* 淺色模式變數 */
+        [data-theme="light"] {
+            --bg-color: #f4f6f9;
+            --text-color: #333333;
+            --card-bg: #ffffff;
+            --tab-bg: #e0e0e0;
+            --tab-text: #333333;
+            --tab-active-bg: #2c3e50;
+            --tab-active-text: #ffffff;
+            --input-bg: #ffffff;
+            --input-border: #ccc;
+            --input-text: #333333;
+            --table-border: #e0e0e0;
+            --table-row-even: #f8f9fa;
+            --table-row-hover: #e9ecef;
+            --header-batter: #d35400;
+            --header-pitcher: #2980b9;
+            --btn-back-bg: #2e7d32;
+            --btn-back-hover: #1b5e20;
+        }
+
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
-            background-color: #f4f6f9;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
         }
-        h2 { color: #333; margin-bottom: 15px; }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        h2 { margin: 0; color: var(--text-color); }
+
+        .top-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .btn-action {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-back { background-color: var(--btn-back-bg); }
+        .btn-back:hover { background-color: var(--btn-back-hover); }
+
+        .btn-toggle {
+            background-color: var(--tab-bg);
+            color: var(--text-color);
+            border: 1px solid var(--input-border);
+        }
+        .btn-toggle:hover { opacity: 0.8; }
+
         .tab-container { display: flex; gap: 10px; margin-bottom: 15px; }
         .tab-button {
             padding: 10px 20px;
@@ -18,13 +104,13 @@
             font-weight: bold;
             cursor: pointer;
             border: none;
-            background-color: #e0e0e0;
-            color: #333;
+            background-color: var(--tab-bg);
+            color: var(--tab-text);
             border-radius: 6px 6px 0 0;
             transition: 0.3s;
         }
-        .tab-button.active { background-color: #2c3e50; color: white; }
-        .tab-button:hover:not(.active) { background-color: #d0d0d0; }
+        .tab-button.active { background-color: var(--tab-active-bg); color: var(--tab-active-text); }
+        .tab-button:hover:not(.active) { opacity: 0.8; }
         
         .control-container {
             display: flex;
@@ -38,35 +124,28 @@
             max-width: 280px;
             padding: 8px 12px;
             font-size: 14px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--input-border);
             border-radius: 4px;
+            background-color: var(--input-bg);
+            color: var(--input-text);
         }
         .btn-reset {
-            padding: 8px 16px;
-            font-size: 14px;
-            font-weight: bold;
-            color: #fff;
             background-color: #e74c3c;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: 0.2s;
         }
         .btn-reset:hover { background-color: #c0392b; }
 
         .table-container {
             overflow-x: auto;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            background: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            background: var(--card-bg);
             border-radius: 0 8px 8px 8px;
             min-height: 200px;
         }
         table { width: 100%; border-collapse: collapse; text-align: center; font-size: 14px; }
-        th, td { padding: 10px 12px; border-bottom: 1px solid #e0e0e0; white-space: nowrap; }
+        th, td { padding: 10px 12px; border-bottom: 1px solid var(--table-border); white-space: nowrap; }
         
         /* 表頭樣式 */
         th {
-            background-color: #2c3e50;
             color: white;
             position: sticky;
             top: 0;
@@ -75,26 +154,36 @@
             transition: background-color 0.2s;
         }
         th:hover { opacity: 0.85; }
-        .batter-header th { background-color: #d35400; }
-        .pitcher-header th { background-color: #2980b9; }
+        .batter-header th { background-color: var(--header-batter); }
+        .pitcher-header th { background-color: var(--header-pitcher); }
 
-        tr:nth-child(even) { background-color: #f8f9fa; }
-        tr:hover { background-color: #e9ecef; }
-        .error-msg { color: #d9534f; padding: 20px; text-align: center; font-size: 16px; }
+        tr:nth-child(even) { background-color: var(--table-row-even); }
+        tr:hover { background-color: var(--table-row-hover); }
+        .error-msg { color: #e74c3c; padding: 20px; text-align: center; font-size: 16px; }
     </style>
 </head>
 <body>
 
-    <h2>MLB 球員資料庫</h2>
+    <div class="header-top">
+        <h2 id="mainTitle">⚾ MLB 球員資料庫</h2>
+        <div class="top-controls">
+            <!-- 語系切換按鈕 -->
+            <button class="btn-action btn-toggle" onclick="toggleLanguage()" id="langBtn">English</button>
+            <!-- 主題切換按鈕 (預設深色) -->
+            <button class="btn-action btn-toggle" onclick="toggleTheme()" id="themeBtn">☀️ 淺色模式</button>
+            <!-- 回到遊戲介面按鈕 -->
+            <a href="mlbcard.html" class="btn-action btn-back" id="backBtn">🎮 回到遊戲介面</a>
+        </div>
+    </div>
 
     <div class="tab-container">
-        <button class="tab-button active" onclick="switchTab('batter', this)">⚾ 打者列表 (Batter)</button>
-        <button class="tab-button" onclick="switchTab('pitcher', this)">🥎 投手列表 (Pitcher)</button>
+        <button class="tab-button active" id="tabBatter" onclick="switchTab('batter', this)">⚾ 打者列表 (Batter)</button>
+        <button class="tab-button" id="tabPitcher" onclick="switchTab('pitcher', this)">🥎 投手列表 (Pitcher)</button>
     </div>
 
     <div class="control-container">
         <input type="text" id="searchInput" class="search-input" placeholder="搜尋球員名稱或隊伍..." onkeyup="filterTable()">
-        <button class="btn-reset" onclick="resetSort()">🔄 重置排序條件</button>
+        <button class="btn-action btn-reset" id="resetBtn" onclick="resetSort()">🔄 重置排序條件</button>
     </div>
 
     <div id="errorMessage" class="error-msg" style="display: none;"></div>
@@ -107,10 +196,78 @@
     </div>
 
     <script>
-        // 紀錄排序順序：先點的永遠在最前面（第一優先）
+        // 全局設定狀態
+        let currentLang = 'zh'; // 'zh' 或 'en'
+        let currentMode = 'batter'; // 'batter' 或 'pitcher'
         let sortRules = [];
-        let originalRowsData = []; // 保存原始讀取的資料備份，以便重置
+        let originalRowsData = [];
 
+        // 多語系字典
+        const i18n = {
+            zh: {
+                pageTitle: "MLB 球員資料庫",
+                mainTitle: "⚾ MLB 球員資料庫",
+                backBtn: "🎮 回到遊戲介面",
+                langBtn: "English",
+                themeLight: "☀️ 淺色模式",
+                themeDark: "🌙 深色模式",
+                tabBatter: "⚾ 打者列表 (Batter)",
+                tabPitcher: "🥎 投手列表 (Pitcher)",
+                searchPlaceholder: "搜尋球員名稱或隊伍...",
+                resetBtn: "🔄 重置排序條件",
+                errorMsg: "<strong>⚠️ 資料載入失敗！</strong><br>請確認 {mode}.json 檔案已放置好，且專案已透過 Web Server / GitHub Pages 執行。"
+            },
+            en: {
+                pageTitle: "MLB Player Database",
+                mainTitle: "⚾ MLB Player Database",
+                backBtn: "🎮 Back to Game",
+                langBtn: "中文",
+                themeLight: "☀️ Light Mode",
+                themeDark: "🌙 Dark Mode",
+                tabBatter: "⚾ Batter List",
+                tabPitcher: "🥎 Pitcher List",
+                searchPlaceholder: "Search player or team...",
+                resetBtn: "🔄 Reset Sorting",
+                errorMsg: "<strong>⚠️ Data Load Failed!</strong><br>Please make sure {mode}.json exists and running via Web Server / GitHub Pages."
+            }
+        };
+
+        // 1. 深色 / 淺色模式切換 (預設深色)
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const themeBtn = document.getElementById('themeBtn');
+            
+            if (currentTheme === 'light') {
+                document.documentElement.removeAttribute('data-theme');
+                themeBtn.textContent = i18n[currentLang].themeLight;
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                themeBtn.textContent = i18n[currentLang].themeDark;
+            }
+        }
+
+        // 2. 雙語版本切換
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            updateLanguageUI();
+        }
+
+        function updateLanguageUI() {
+            const langData = i18n[currentLang];
+            const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+
+            document.getElementById('pageTitle').textContent = langData.pageTitle;
+            document.getElementById('mainTitle').textContent = langData.mainTitle;
+            document.getElementById('backBtn').textContent = langData.backBtn;
+            document.getElementById('langBtn').textContent = langData.langBtn;
+            document.getElementById('themeBtn').textContent = isLight ? langData.themeDark : langData.themeLight;
+            document.getElementById('tabBatter').textContent = langData.tabBatter;
+            document.getElementById('tabPitcher').textContent = langData.tabPitcher;
+            document.getElementById('searchInput').placeholder = langData.searchPlaceholder;
+            document.getElementById('resetBtn').textContent = langData.resetBtn;
+        }
+
+        // JSON 資料處理與渲染
         async function fetchJsonSafely(filename) {
             try {
                 const response = await fetch(filename);
@@ -123,6 +280,7 @@
         }
 
         async function loadData(mode) {
+            currentMode = mode;
             const headerRow = document.getElementById('tableHeader');
             const bodyContainer = document.getElementById('tableBody');
             const errorContainer = document.getElementById('errorMessage');
@@ -132,7 +290,7 @@
             errorContainer.style.display = 'none';
             document.getElementById('searchInput').value = '';
             
-            sortRules = []; // 切換頁籤重置排序條件
+            sortRules = [];
 
             let data = null;
             if (mode === 'batter') {
@@ -144,10 +302,7 @@
             }
 
             if (!data) {
-                errorContainer.innerHTML = `
-                    <strong>⚠️ 資料載入失敗！</strong><br>
-                    請確認 ${mode}.json 檔案已放置好，且專案已透過 Web Server / GitHub Pages 執行。
-                `;
+                errorContainer.innerHTML = i18n[currentLang].errorMsg.replace('{mode}', mode);
                 errorContainer.style.display = 'block';
                 return;
             }
@@ -190,21 +345,18 @@
             });
         }
 
-        // 點擊排序邏輯（先點的保持最前）
+        // 排序邏輯
         function handleSortClick(colIndex) {
             const existingRuleIndex = sortRules.findIndex(rule => rule.colIndex === colIndex);
 
             if (existingRuleIndex !== -1) {
-                // 如果是已經點過的欄位：切換升降冪方向（保持在原本的順位，不改變優先序）
                 const currentDir = sortRules[existingRuleIndex].dir;
                 if (currentDir === 'desc') {
                     sortRules[existingRuleIndex].dir = 'asc';
                 } else {
-                    // 第三次點擊：從排序條件中移除
                     sortRules.splice(existingRuleIndex, 1);
                 }
             } else {
-                // 新點擊的欄位：追加到佇列最後面（作為次要、第三要條件）
                 sortRules.push({ colIndex: colIndex, dir: 'desc' });
             }
 
@@ -212,7 +364,6 @@
             updateHeaderUI();
         }
 
-        // 多重條件排序演算
         function applyMultiSort() {
             const tbody = document.getElementById('tableBody');
             const rows = Array.from(tbody.querySelectorAll('tr'));
@@ -220,7 +371,6 @@
             if (sortRules.length === 0) return;
 
             rows.sort((rowA, rowB) => {
-                // 按照點擊的先後順序依次比對
                 for (let rule of sortRules) {
                     const colIndex = rule.colIndex;
                     const isAsc = rule.dir === 'asc';
@@ -238,10 +388,7 @@
                         comparison = isAsc ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
                     }
 
-                    // 若不平手，直接決定順序；若平手，才比下一個條件
-                    if (comparison !== 0) {
-                        return comparison;
-                    }
+                    if (comparison !== 0) return comparison;
                 }
                 return 0;
             });
@@ -249,24 +396,17 @@
             rows.forEach(row => tbody.appendChild(row));
         }
 
-        // 重置所有排序
         function resetSort() {
             sortRules = [];
-            
-            // 重新讀取當前模式並刷新 UI
-            const activeTab = document.querySelector('.tab-button.active');
-            const mode = activeTab.textContent.includes('打者') ? 'batter' : 'pitcher';
-            loadData(mode);
+            loadData(currentMode);
         }
 
-        // 更新 UI 標示（以 ①, ②, ③ 標明優先層級）
         function updateHeaderUI() {
             const allHeaders = document.querySelectorAll('#tableHeader th');
 
             allHeaders.forEach(th => {
                 const colIndex = parseInt(th.dataset.col);
                 const rawLabel = th.dataset.label;
-                
                 const ruleIndex = sortRules.findIndex(rule => rule.colIndex === colIndex);
 
                 if (ruleIndex !== -1) {
