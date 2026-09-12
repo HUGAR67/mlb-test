@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLB 球員資料庫</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f6f9;
+        }
+        h2 { color: #333; margin-bottom: 15px; }
+        .tab-container { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-button {
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            background-color: #e0e0e0;
+            color: #333;
+            border-radius: 6px 6px 0 0;
+            transition: 0.3s;
+        }
+        .tab-button.active { background-color: #2c3e50; color: white; }
+        .tab-button:hover:not(.active) { background-color: #d0d0d0; }
+        .search-container { margin-bottom: 15px; }
+        .search-input {
+            width: 100%;
+            max-width: 300px;
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .table-container {
+            overflow-x: auto;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background: #fff;
+            border-radius: 0 8px 8px 8px;
+            min-height: 200px;
+        }
+        table { width: 100%; border-collapse: collapse; text-align: center; font-size: 14px; }
+        th, td { padding: 10px 12px; border-bottom: 1px solid #e0e0e0; white-space: nowrap; }
+        th { background-color: #2c3e50; color: white; position: sticky; top: 0; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        tr:hover { background-color: #e9ecef; }
+        .badge { padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; }
+        .badge-batter { background-color: #e67e22; }
+        .badge-pitcher { background-color: #2980b9; }
+        .error-msg { color: #d9534f; padding: 20px; text-align: center; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+    <h2>MLB 球員資料庫</h2>
+
+    <div class="tab-container">
+        <button class="tab-button active" onclick="switchTab('all', this)">全部球員庫 (All)</button>
+        <button class="tab-button" onclick="switchTab('batter', this)">打者列表 (Batter)</button>
+        <button class="tab-button" onclick="switchTab('pitcher', this)">投手列表 (Pitcher)</button>
+    </div>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="搜尋球員名稱或隊伍..." onkeyup="filterTable()">
+    </div>
+
+    <div class="table-container">
+        <table id="playerTable">
+            <thead><tr id="tableHeader"></tr></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+        <div id="errorMessage" class="error-msg" style="display: none;"></div>
+    </div>
+
+    <script>
+        // 容錯讀取 JSON：如果本機瀏覽器阻擋 fetch()，會顯示清楚提示
+        async function fetchJsonSafely(filename) {
+            try {
+                const response = await fetch(filename);
+                if (!response.ok) throw new Error('HTTP status ' + response.status);
+                return await response.json();
+            } catch (err) {
+                console.warn(`無法直接讀取 ${filename}，可能是受限於瀏覽器 CORS 政策:`, err);
+                return null;
+            }
+        }
+
+        async function loadData(mode) {
+            const headerRow = document.getElementById('tableHeader');
+            const bodyContainer = document.getElementById('tableBody');
+            const errorContainer = document.getElementById('errorMessage');
+
+            headerRow.innerHTML = '';
+            bodyContainer.innerHTML = '';
+            errorContainer.style.display = 'none';
+            document.getElementById('searchInput').value = '';
+
+            const batterData = await fetchJsonSafely('batter.json');
+            const pitcherData = await fetchJsonSafely('pitcher.json');
+
+            if (!batterData && !pitcherData) {
+                errorContainer.innerHTML = `
+                    <strong>⚠️ 資料無法載入！</strong><br>
+                    這是瀏覽器的安全性限制（CORS Policy）導致無法直接點開讀取本地檔。<br><br>
+                    <strong>解決方式：</strong><br>
+                    1. 使用 VS Code 安裝 <strong>Live Server</strong> 擴充套件開啟。<br>
+                    2. 或使用 Python / Node.js 啟動本地 Server 開啟此頁面。
+                `;
+                errorContainer.style.display = 'block';
+                return;
+            }
+
+            if (mode === 'all') {
+                let bData = batterData || [];
+                let pData = pitcherData || [];
+
+                let headers = {};
+                if (bData.length > 0) Object.assign(headers, bData[0]);
+                if (pData.length > 0) Object.assign(headers, pData[0]);
+
+                renderHeader(headers, true);
+
+                let combinedRows = [];
+                if (bData.length > 1) bData.slice(1).forEach(item => combinedRows.push({ ...item, _type: '打者' }));
+                if (pData.length > 1) pData.slice(1).forEach(item => combinedRows.push({ ...item, _type: '投手' }));
+
+                renderBody(headers, combinedRows, true);
+
+            } else if (mode === 'batter') {
+                if (!batterData) { showError('無法讀取 batter.json'); return; }
+                renderHeader(batterData[0], false);
+                renderBody(batterData[0], batterData.slice(1), false);
+            } else if (mode === 'pitcher') {
+                if (!pitcherData) { showError('無法讀取 pitcher.json'); return; }
+                renderHeader(pitcherData[0], false);
+                renderBody(pitcherData[0], pitcherData.slice(1), false);
+            }
+        }
+
+        function renderHeader(headers, isAllMode) {
+            const headerRow = document.getElementById('tableHeader');
+            if (isAllMode) {
+                const thType = document.createElement('th');
+                thType.textContent = '身分';
+                headerRow.appendChild(thType);
+            }
+            Object.keys(headers).forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = headers[key];
+                headerRow.appendChild(th);
+            });
+        }
+
+        function renderBody(headers, rows, isAllMode) {
+            const bodyContainer = document.getElementById('tableBody');
+            bodyContainer.innerHTML = '';
+
+            rows.forEach(rowData => {
+                const tr = document.createElement('tr');
+                if (isAllMode) {
+                    const tdType = document.createElement('td');
+                    const badge = document.createElement('span');
+                    badge.textContent = rowData._type;
+                    badge.className = `badge ${rowData._type === '打者' ? 'badge-batter' : 'badge-pitcher'}`;
+                    tdType.appendChild(badge);
+                    tr.appendChild(tdType);
+                }
+                Object.keys(headers).forEach(key => {
+                    const td = document.createElement('td');
+                    td.textContent = rowData[key] !== undefined ? rowData[key] : '-';
+                    tr.appendChild(td);
+                });
+                bodyContainer.appendChild(tr);
+            });
+        }
+
+        function switchTab(mode, btn) {
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            loadData(mode);
+        }
+
+        function filterTable() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#tableBody tr');
+            rows.forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(keyword) ? '' : 'none';
+            });
+        }
+
+        function showError(msg) {
+            const errorContainer = document.getElementById('errorMessage');
+            errorContainer.innerHTML = msg;
+            errorContainer.style.display = 'block';
+        }
+
+        window.onload = function() {
+            loadData('all');
+        };
+    </script>
+</body>
+</html>
