@@ -11,6 +11,15 @@
             background-color: #f4f6f9;
         }
         h2 { color: #333; margin-bottom: 15px; }
+        .section-title {
+            color: #2c3e50;
+            margin: 25px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
         .tab-container { display: flex; gap: 10px; margin-bottom: 15px; }
         .tab-button {
             padding: 10px 20px;
@@ -38,15 +47,15 @@
             overflow-x: auto;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             background: #fff;
-            border-radius: 0 8px 8px 8px;
-            min-height: 200px;
+            border-radius: 8px;
+            margin-bottom: 25px;
         }
         table { width: 100%; border-collapse: collapse; text-align: center; font-size: 14px; }
         th, td { padding: 10px 12px; border-bottom: 1px solid #e0e0e0; white-space: nowrap; }
         th { background-color: #2c3e50; color: white; position: sticky; top: 0; }
         tr:nth-child(even) { background-color: #f8f9fa; }
         tr:hover { background-color: #e9ecef; }
-        .badge { padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; color: #fff; }
+        .badge { padding: 4px 10px; border-radius: 12px; font-size: 13px; font-weight: bold; color: #fff; }
         .badge-batter { background-color: #e67e22; }
         .badge-pitcher { background-color: #2980b9; }
         .error-msg { color: #d9534f; padding: 20px; text-align: center; font-size: 16px; }
@@ -66,34 +75,28 @@
         <input type="text" id="searchInput" class="search-input" placeholder="搜尋球員名稱或隊伍..." onkeyup="filterTable()">
     </div>
 
-    <div class="table-container">
-        <table id="playerTable">
-            <thead><tr id="tableHeader"></tr></thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-        <div id="errorMessage" class="error-msg" style="display: none;"></div>
-    </div>
+    <!-- 動態渲染區域 -->
+    <div id="viewsContainer"></div>
+    <div id="errorMessage" class="error-msg" style="display: none;"></div>
 
     <script>
-        // 容錯讀取 JSON：如果本機瀏覽器阻擋 fetch()，會顯示清楚提示
+        // 容錯讀取 JSON
         async function fetchJsonSafely(filename) {
             try {
                 const response = await fetch(filename);
                 if (!response.ok) throw new Error('HTTP status ' + response.status);
                 return await response.json();
             } catch (err) {
-                console.warn(`無法直接讀取 ${filename}，可能是受限於瀏覽器 CORS 政策:`, err);
+                console.warn(`無法直接讀取 ${filename}:`, err);
                 return null;
             }
         }
 
         async function loadData(mode) {
-            const headerRow = document.getElementById('tableHeader');
-            const bodyContainer = document.getElementById('tableBody');
+            const viewsContainer = document.getElementById('viewsContainer');
             const errorContainer = document.getElementById('errorMessage');
 
-            headerRow.innerHTML = '';
-            bodyContainer.innerHTML = '';
+            viewsContainer.innerHTML = '';
             errorContainer.style.display = 'none';
             document.getElementById('searchInput').value = '';
 
@@ -113,67 +116,70 @@
             }
 
             if (mode === 'all') {
-                let bData = batterData || [];
-                let pData = pitcherData || [];
-
-                let headers = {};
-                if (bData.length > 0) Object.assign(headers, bData[0]);
-                if (pData.length > 0) Object.assign(headers, pData[0]);
-
-                renderHeader(headers, true);
-
-                let combinedRows = [];
-                if (bData.length > 1) bData.slice(1).forEach(item => combinedRows.push({ ...item, _type: '打者' }));
-                if (pData.length > 1) pData.slice(1).forEach(item => combinedRows.push({ ...item, _type: '投手' }));
-
-                renderBody(headers, combinedRows, true);
-
+                // 全部球員庫：分別渲染「打者表格」與「投手表格」
+                if (batterData && batterData.length > 0) {
+                    renderTableGroup('打者數據 (Batter)', 'batter', batterData[0], batterData.slice(1));
+                }
+                if (pitcherData && pitcherData.length > 0) {
+                    renderTableGroup('投手數據 (Pitcher)', 'pitcher', pitcherData[0], pitcherData.slice(1));
+                }
             } else if (mode === 'batter') {
                 if (!batterData) { showError('無法讀取 batter.json'); return; }
-                renderHeader(batterData[0], false);
-                renderBody(batterData[0], batterData.slice(1), false);
+                renderTableGroup('打者列表 (Batter)', 'batter', batterData[0], batterData.slice(1));
             } else if (mode === 'pitcher') {
                 if (!pitcherData) { showError('無法讀取 pitcher.json'); return; }
-                renderHeader(pitcherData[0], false);
-                renderBody(pitcherData[0], pitcherData.slice(1), false);
+                renderTableGroup('投手列表 (Pitcher)', 'pitcher', pitcherData[0], pitcherData.slice(1));
             }
         }
 
-        function renderHeader(headers, isAllMode) {
-            const headerRow = document.getElementById('tableHeader');
-            if (isAllMode) {
-                const thType = document.createElement('th');
-                thType.textContent = '身分';
-                headerRow.appendChild(thType);
-            }
+        // 建立單個數據表格組
+        function renderTableGroup(title, type, headers, rows) {
+            const viewsContainer = document.getElementById('viewsContainer');
+
+            // 1. 建立標題與 Badge 標籤
+            const sectionTitle = document.createElement('h3');
+            sectionTitle.className = 'section-title';
+            
+            const badge = document.createElement('span');
+            badge.className = `badge ${type === 'batter' ? 'badge-batter' : 'badge-pitcher'}`;
+            badge.textContent = type === 'batter' ? '打者' : '投手';
+            
+            sectionTitle.appendChild(badge);
+            sectionTitle.appendChild(document.createTextNode(title));
+            viewsContainer.appendChild(sectionTitle);
+
+            // 2. 建立表格容器與 Table
+            const tableContainer = document.createElement('div');
+            tableContainer.className = 'table-container';
+
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            // 表頭 Header
+            const trHeader = document.createElement('tr');
             Object.keys(headers).forEach(key => {
                 const th = document.createElement('th');
                 th.textContent = headers[key];
-                headerRow.appendChild(th);
+                trHeader.appendChild(th);
             });
-        }
+            thead.appendChild(trHeader);
 
-        function renderBody(headers, rows, isAllMode) {
-            const bodyContainer = document.getElementById('tableBody');
-            bodyContainer.innerHTML = '';
-
+            // 資料列 Body
             rows.forEach(rowData => {
                 const tr = document.createElement('tr');
-                if (isAllMode) {
-                    const tdType = document.createElement('td');
-                    const badge = document.createElement('span');
-                    badge.textContent = rowData._type;
-                    badge.className = `badge ${rowData._type === '打者' ? 'badge-batter' : 'badge-pitcher'}`;
-                    tdType.appendChild(badge);
-                    tr.appendChild(tdType);
-                }
                 Object.keys(headers).forEach(key => {
                     const td = document.createElement('td');
                     td.textContent = rowData[key] !== undefined ? rowData[key] : '-';
                     tr.appendChild(td);
                 });
-                bodyContainer.appendChild(tr);
+                tbody.appendChild(tr);
             });
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            tableContainer.appendChild(table);
+            viewsContainer.appendChild(tableContainer);
         }
 
         function switchTab(mode, btn) {
@@ -182,10 +188,12 @@
             loadData(mode);
         }
 
+        // 搜尋過濾功能（可同時搜尋多個表格）
         function filterTable() {
             const keyword = document.getElementById('searchInput').value.toLowerCase();
-            const rows = document.querySelectorAll('#tableBody tr');
-            rows.forEach(row => {
+            const allRows = document.querySelectorAll('#viewsContainer tbody tr');
+            
+            allRows.forEach(row => {
                 row.style.display = row.textContent.toLowerCase().includes(keyword) ? '' : 'none';
             });
         }
