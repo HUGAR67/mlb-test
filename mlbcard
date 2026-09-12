@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLB 球員抽卡系統 & 資料庫</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #1e272e;
+            color: #fff;
+        }
+        h1, h2 { text-align: center; color: #f5cd79; }
+        
+        /* 導覽頁籤 */
+        .tab-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-button {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            background-color: #485460;
+            color: #fff;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+        .tab-button.active { background-color: #f5cd79; color: #1e272e; }
+        .tab-button:hover:not(.active) { background-color: #576574; }
+
+        /* 頁面分頁內容 */
+        .page-content { display: none; }
+        .page-content.active { display: block; }
+
+        /* === 抽卡區塊 === */
+        .gacha-section {
+            text-align: center;
+            background: #2c3e50;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 900px;
+            margin: 0 auto 30px auto;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+        .btn-gacha {
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .btn-single { background-color: #3498db; color: white; }
+        .btn-ten { background-color: #e67e22; color: white; }
+        .btn-gacha:hover { transform: scale(1.05); }
+
+        /* 卡片展示區 */
+        .card-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        .card {
+            width: 150px;
+            height: 210px;
+            background: #34495e;
+            border: 3px solid #bdc3c7;
+            border-radius: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            animation: popIn 0.4s ease-out;
+            position: relative;
+        }
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .card.batter { border-color: #e67e22; }
+        .card.pitcher { border-color: #2980b9; }
+        .card-type {
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: white;
+        }
+        .card-type.batter { background-color: #e67e22; }
+        .card-type.pitcher { background-color: #2980b9; }
+        .card-name { font-size: 16px; font-weight: bold; text-align: center; margin: 10px 0; }
+        .card-team { font-size: 12px; color: #bdc3c7; }
+
+        /* === 球員資料庫表格區塊 === */
+        .search-container { text-align: center; margin-bottom: 15px; }
+        .search-input {
+            width: 80%;
+            max-width: 400px;
+            padding: 10px;
+            font-size: 15px;
+            border-radius: 6px;
+            border: none;
+        }
+        .table-container {
+            overflow-x: auto;
+            background: #fff;
+            border-radius: 8px;
+            color: #333;
+        }
+        table { width: 100%; border-collapse: collapse; text-align: center; font-size: 14px; }
+        th, td { padding: 10px 12px; border-bottom: 1px solid #ddd; white-space: nowrap; }
+        th { background-color: #f5cd79; color: #1e272e; position: sticky; top: 0; }
+        tr:nth-child(even) { background-color: #f8f9fa; }
+        
+        .badge { padding: 3px 8px; border-radius: 12px; font-size: 12px; color: #fff; font-weight: bold; }
+        .badge-batter { background-color: #e67e22; }
+        .badge-pitcher { background-color: #2980b9; }
+    </style>
+</head>
+<body>
+
+    <h1>⚾ MLB 球員卡池與資料庫</h1>
+
+    <!-- 頁籤導覽 -->
+    <div class="tab-container">
+        <button class="tab-button active" onclick="switchMainTab('gachaTab', this)">🎰 球員抽卡區</button>
+        <button class="tab-button" onclick="switchMainTab('databaseTab', this)">📋 所有球員庫</button>
+    </div>
+
+    <!-- 頁面一：抽卡區 -->
+    <div id="gachaTab" class="page-content active">
+        <div class="gacha-section">
+            <h2>球員卡池抽卡</h2>
+            <div>
+                <button class="btn-gacha btn-single" onclick="drawCards(1)">單抽 ⚾</button>
+                <button class="btn-gacha btn-ten" onclick="drawCards(10)">十連抽 ⚡</button>
+            </div>
+            <div id="cardResult" class="card-grid"></div>
+        </div>
+    </div>
+
+    <!-- 頁面二：球員庫區 -->
+    <div id="databaseTab" class="page-content">
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜尋球員姓名或球隊..." onkeyup="filterTable()">
+        </div>
+        <div class="table-container">
+            <table>
+                <thead><tr id="tableHeader"></tr></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let allPlayers = []; // 儲存所有球員資料
+        let batterHeaders = {};
+        let pitcherHeaders = {};
+
+        // 初始化：讀取打者與投手 JSON 資料
+        async function initData() {
+            try {
+                const [batterRes, pitcherRes] = await Promise.all([
+                    fetch('batter.json').then(res => res.json()),
+                    fetch('pitcher.json').then(res => res.json())
+                ]);
+
+                // 解析打者
+                if (batterRes && batterRes.length > 0) {
+                    batterHeaders = batterRes[0];
+                    batterRes.slice(1).forEach(item => {
+                        allPlayers.push({ ...item, _type: '打者' });
+                    });
+                }
+
+                // 解析投手
+                if (pitcherRes && pitcherRes.length > 0) {
+                    pitcherHeaders = pitcherRes[0];
+                    pitcherRes.slice(1).forEach(item => {
+                        allPlayers.push({ ...item, _type: '投手' });
+                    });
+                }
+
+                // 預設建立資料庫表格
+                renderDatabaseTable();
+            } catch (err) {
+                console.error("資料載入失敗:", err);
+            }
+        }
+
+        // 抽卡邏輯
+        function drawCards(count) {
+            const resultContainer = document.getElementById('cardResult');
+            resultContainer.innerHTML = '';
+
+            if (allPlayers.length === 0) {
+                resultContainer.innerHTML = '<p>球員資料還在載入中，請稍後再試...</p>';
+                return;
+            }
+
+            for (let i = 0; i < count; i++) {
+                // 隨機抽取一位球員
+                const randomIndex = Math.floor(Math.random() * allPlayers.length);
+                const player = allPlayers[randomIndex];
+
+                // 取得姓名與球隊欄位名稱
+                const nameKey = Object.keys(player)[0]; // 第一個欄位通常是姓名或ID
+                const teamKey = Object.keys(player)[1]; // 第二個欄位通常是隊伍
+
+                const card = document.createElement('div');
+                card.className = `card ${player._type === '打者' ? 'batter' : 'pitcher'}`;
+                
+                card.innerHTML = `
+                    <span class="card-type ${player._type === '打者' ? 'batter' : 'pitcher'}">${player._type}</span>
+                    <div class="card-name">${player[nameKey] || '未知球員'}</div>
+                    <div class="card-team">${player[teamKey] || ''}</div>
+                `;
+
+                resultContainer.appendChild(card);
+            }
+        }
+
+        // 渲染球員資料庫表格
+        function renderDatabaseTable() {
+            const headerRow = document.getElementById('tableHeader');
+            const bodyContainer = document.getElementById('tableBody');
+            
+            headerRow.innerHTML = '<th>身分</th>';
+            bodyContainer.innerHTML = '';
+
+            // 合併欄位表頭
+            const mergedHeaders = { ...batterHeaders, ...pitcherHeaders };
+
+            Object.keys(mergedHeaders).forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = mergedHeaders[key];
+                headerRow.appendChild(th);
+            });
+
+            allPlayers.forEach(player => {
+                const tr = document.createElement('tr');
+                
+                // 身分標籤
+                const tdType = document.createElement('td');
+                const badge = document.createElement('span');
+                badge.textContent = player._type;
+                badge.className = `badge ${player._type === '打者' ? 'badge-batter' : 'badge-pitcher'}`;
+                tdType.appendChild(badge);
+                tr.appendChild(tdType);
+
+                // 各欄位資料
+                Object.keys(mergedHeaders).forEach(key => {
+                    const td = document.createElement('td');
+                    td.textContent = player[key] !== undefined ? player[key] : '-';
+                    tr.appendChild(td);
+                });
+
+                bodyContainer.appendChild(tr);
+            });
+        }
+
+        // 頁籤切換
+        function switchMainTab(tabId, btn) {
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+
+            btn.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // 搜尋過濾功能
+        function filterTable() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#tableBody tr');
+
+            rows.forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(keyword) ? '' : 'none';
+            });
+        }
+
+        // 頁面初次載入
+        window.onload = initData;
+    </script>
+</body>
+</html>
