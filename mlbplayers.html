@@ -11,13 +11,6 @@
             background-color: #f4f6f9;
         }
         h2 { color: #333; margin-bottom: 15px; }
-        .section-title {
-            color: #2c3e50;
-            margin: 20px 0 10px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
         .tab-container { display: flex; gap: 10px; margin-bottom: 15px; }
         .tab-button {
             padding: 10px 20px;
@@ -45,13 +38,13 @@
             overflow-x: auto;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             background: #fff;
-            border-radius: 8px;
-            margin-bottom: 25px;
+            border-radius: 0 8px 8px 8px;
+            min-height: 200px;
         }
         table { width: 100%; border-collapse: collapse; text-align: center; font-size: 14px; }
         th, td { padding: 10px 12px; border-bottom: 1px solid #e0e0e0; white-space: nowrap; }
         
-        /* 表頭排序效果 */
+        /* 表頭樣式與排序指標 */
         th {
             background-color: #2c3e50;
             color: white;
@@ -64,7 +57,7 @@
         th:hover { opacity: 0.85; }
         .batter-header th { background-color: #d35400; }
         .pitcher-header th { background-color: #2980b9; }
-        
+
         tr:nth-child(even) { background-color: #f8f9fa; }
         tr:hover { background-color: #e9ecef; }
         .error-msg { color: #d9534f; padding: 20px; text-align: center; font-size: 16px; }
@@ -74,10 +67,10 @@
 
     <h2>MLB 球員資料庫</h2>
 
+    <!-- 切換分頁：只保留打者與投手 -->
     <div class="tab-container">
-        <button class="tab-button active" onclick="switchTab('all', this)">全部球員庫 (All)</button>
-        <button class="tab-button" onclick="switchTab('batter', this)">打者列表 (Batter)</button>
-        <button class="tab-button" onclick="switchTab('pitcher', this)">投手列表 (Pitcher)</button>
+        <button class="tab-button active" onclick="switchTab('batter', this)">⚾ 打者列表 (Batter)</button>
+        <button class="tab-button" onclick="switchTab('pitcher', this)">🥎 投手列表 (Pitcher)</button>
     </div>
 
     <div class="search-container">
@@ -86,10 +79,15 @@
 
     <div id="errorMessage" class="error-msg" style="display: none;"></div>
 
-    <!-- 容器區域 (可動態渲染多個表格) -->
-    <div id="tablesWrapper"></div>
+    <div class="table-container">
+        <table id="playerTable">
+            <thead><tr id="tableHeader"></tr></thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
 
     <script>
+        // 安全讀取 JSON 檔案
         async function fetchJsonSafely(filename) {
             try {
                 const response = await fetch(filename);
@@ -102,75 +100,60 @@
         }
 
         async function loadData(mode) {
-            const wrapper = document.getElementById('tablesWrapper');
+            const headerRow = document.getElementById('tableHeader');
+            const bodyContainer = document.getElementById('tableBody');
             const errorContainer = document.getElementById('errorMessage');
 
-            wrapper.innerHTML = '';
+            headerRow.innerHTML = '';
+            bodyContainer.innerHTML = '';
             errorContainer.style.display = 'none';
             document.getElementById('searchInput').value = '';
 
-            const batterData = await fetchJsonSafely('batter.json');
-            const pitcherData = await fetchJsonSafely('pitcher.json');
+            let data = null;
+            if (mode === 'batter') {
+                data = await fetchJsonSafely('batter.json');
+                headerRow.className = 'batter-header';
+            } else if (mode === 'pitcher') {
+                data = await fetchJsonSafely('pitcher.json');
+                headerRow.className = 'pitcher-header';
+            }
 
-            if (!batterData && !pitcherData) {
+            if (!data) {
                 errorContainer.innerHTML = `
-                    <strong>⚠️ 資料無法載入！</strong><br>
-                    請確認 batter.json 與 pitcher.json 已正確放置，且透過 Live Server 啟動頁面。
+                    <strong>⚠️ 資料載入失敗！</strong><br>
+                    請確認 ${mode}.json 檔案已放置好，且專案已透過 Web Server / GitHub Pages 執行。
                 `;
                 errorContainer.style.display = 'block';
                 return;
             }
 
-            if (mode === 'all') {
-                if (batterData && batterData.length > 0) {
-                    createSingleTable('⚾ 打者資料庫', batterData, 'batter');
-                }
-                if (pitcherData && pitcherData.length > 0) {
-                    createSingleTable('🥎 投手資料庫', pitcherData, 'pitcher');
-                }
-            } else if (mode === 'batter') {
-                if (!batterData) { showError('無法讀取 batter.json'); return; }
-                createSingleTable('⚾ 打者資料庫', batterData, 'batter');
-            } else if (mode === 'pitcher') {
-                if (!pitcherData) { showError('無法讀取 pitcher.json'); return; }
-                createSingleTable('🥎 投手資料庫', pitcherData, 'pitcher');
-            }
+            renderHeader(data[0]);
+            renderBody(data[0], data.slice(1));
         }
 
-        // 建立單一獨立表格並附加排序功能
-        function createSingleTable(title, data, type) {
-            const wrapper = document.getElementById('tablesWrapper');
-
-            const sectionTitle = document.createElement('h3');
-            sectionTitle.className = 'section-title';
-            sectionTitle.innerHTML = title;
-            wrapper.appendChild(sectionTitle);
-
-            const container = document.createElement('div');
-            container.className = 'table-container';
-
-            const table = document.createElement('table');
-            const thead = document.createElement('thead');
-            const tbody = document.createElement('tbody');
-
-            const headerRow = document.createElement('tr');
-            headerRow.className = type === 'batter' ? 'batter-header' : 'pitcher-header';
-
-            const headers = data[0];
+        // 渲染表頭 (儲存原始標題，解決箭頭重複問題)
+        function renderHeader(headers) {
+            const headerRow = document.getElementById('tableHeader');
             const keys = Object.keys(headers);
 
-            // 建立點擊可排序的表頭
             keys.forEach((key, colIndex) => {
                 const th = document.createElement('th');
-                th.textContent = headers[key] + ' ⇅';
-                th.dataset.order = 'desc'; // 預設點擊後第一次為降冪排序 (由大到小)
-                th.onclick = () => sortTable(table, colIndex, th);
+                const rawText = headers[key];
+                
+                th.dataset.label = rawText; // 記住乾淨原始文字
+                th.textContent = rawText + ' ⇅';
+                th.dataset.order = 'desc';
+                th.onclick = () => sortTable(colIndex, th);
+                
                 headerRow.appendChild(th);
             });
-            thead.appendChild(headerRow);
+        }
 
-            // 填入資料列
-            const rows = data.slice(1);
+        // 渲染內容
+        function renderBody(headers, rows) {
+            const bodyContainer = document.getElementById('tableBody');
+            const keys = Object.keys(headers);
+
             rows.forEach(rowData => {
                 const tr = document.createElement('tr');
                 keys.forEach(key => {
@@ -178,36 +161,31 @@
                     td.textContent = rowData[key] !== undefined ? rowData[key] : '-';
                     tr.appendChild(td);
                 });
-                tbody.appendChild(tr);
+                bodyContainer.appendChild(tr);
             });
-
-            table.appendChild(thead);
-            table.appendChild(tbody);
-            container.appendChild(table);
-            wrapper.appendChild(container);
         }
 
-        // 表格排序核心演算法 (智慧判斷數字與文字)
-        function sortTable(table, colIndex, headerElement) {
-            const tbody = table.querySelector('tbody');
+        // 排序演算邏輯
+        function sortTable(colIndex, headerElement) {
+            const tbody = document.getElementById('tableBody');
             const rows = Array.from(tbody.querySelectorAll('tr'));
             const isAsc = headerElement.dataset.order === 'asc';
             
-            // 重置同一個表頭其他欄位的箭頭符號
-            const allHeaders = table.querySelectorAll('th');
+            // 1. 還原所有表頭為初始狀態 (清除多餘箭頭)
+            const allHeaders = document.querySelectorAll('#tableHeader th');
             allHeaders.forEach(th => {
+                const rawLabel = th.dataset.label;
+                th.textContent = rawLabel + ' ⇅';
                 if (th !== headerElement) {
-                    th.textContent = th.textContent.replace(/[ ▲▼]/g, '') + ' ⇅';
                     th.dataset.order = 'desc';
                 }
             });
 
-            // 進行排序
+            // 2. 數據排序 (支援數字與文字)
             rows.sort((rowA, rowB) => {
                 let cellA = rowA.children[colIndex].textContent.trim();
                 let cellB = rowB.children[colIndex].textContent.trim();
 
-                // 轉為數字進行比對（包含浮點數與百分比）
                 let numA = parseFloat(cellA.replace(/[%$,]/g, ''));
                 let numB = parseFloat(cellB.replace(/[%$,]/g, ''));
 
@@ -218,42 +196,39 @@
                 }
             });
 
-            // 重新填回排序後的結果
+            // 3. 重新放回排序後的 DOM
             rows.forEach(row => tbody.appendChild(row));
 
-            // 更新排序狀態與顯示指標
-            const rawTitle = headerElement.textContent.replace(/[ ⇅▲▼]/g, '');
+            // 4. 設定當前標題單一箭頭 (▲ / ▼)
+            const currentLabel = headerElement.dataset.label;
             if (isAsc) {
-                headerElement.textContent = rawTitle + ' ▲';
+                headerElement.textContent = currentLabel + ' ▲';
                 headerElement.dataset.order = 'desc';
             } else {
-                headerElement.textContent = rawTitle + ' ▼';
+                headerElement.textContent = currentLabel + ' ▼';
                 headerElement.dataset.order = 'asc';
             }
         }
 
+        // 切換頁籤
         function switchTab(mode, btn) {
             document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             loadData(mode);
         }
 
+        // 關鍵字搜尋
         function filterTable() {
             const keyword = document.getElementById('searchInput').value.toLowerCase();
-            const rows = document.querySelectorAll('tbody tr');
+            const rows = document.querySelectorAll('#tableBody tr');
             rows.forEach(row => {
                 row.style.display = row.textContent.toLowerCase().includes(keyword) ? '' : 'none';
             });
         }
 
-        function showError(msg) {
-            const errorContainer = document.getElementById('errorMessage');
-            errorContainer.innerHTML = msg;
-            errorContainer.style.display = 'block';
-        }
-
+        // 網頁開啟預設載入打者列表
         window.onload = function() {
-            loadData('all');
+            loadData('batter');
         };
     </script>
 </body>
