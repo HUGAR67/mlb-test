@@ -3,208 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MLB 球員經營與對戰遊戲</title>
+    <title>MLB Manager & Gacha Game</title>
     <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --text-color: #f8fafc;
+            --sub-text: #94a3b8;
+            --primary: #3b82f6;
+            --accent: #f59e0b;
+            --card-bg: #334155;
+            --border-color: #475569;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #f1f5f9;
+            --panel-bg: #ffffff;
+            --text-color: #0f172a;
+            --sub-text: #64748b;
+            --primary: #2563eb;
+            --accent: #d97706;
+            --card-bg: #f8fafc;
+            --border-color: #cbd5e1;
+        }
+
+        * { box-sizing: border-box; transition: background-color 0.3s, color 0.3s; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #1a252f;
-            color: #fff;
+            background-color: var(--bg-color);
+            color: var(--text-color);
         }
-        h1, h2, h3 { text-align: center; color: #f39c12; margin-top: 5px; }
+
+        /* 頂部工具列 (捷徑/模式/語言切換) */
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            max-width: 950px;
+            margin: 0 auto 15px auto;
+            flex-wrap: wrap;
+        }
+        .icon-btn {
+            background: var(--panel-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-decoration: none;
+        }
+        .icon-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+        h1 { text-align: center; color: var(--accent); margin: 0 0 20px 0; font-size: 28px; }
 
         /* 頂部資產與勝績儀表板 */
         .dashboard {
             display: flex;
             justify-content: space-around;
-            background: #2c3e50;
-            padding: 15px;
-            border-radius: 10px;
-            max-width: 900px;
+            background: var(--panel-bg);
+            padding: 16px;
+            border-radius: 12px;
+            max-width: 950px;
             margin: 0 auto 20px auto;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             font-size: 18px;
             font-weight: bold;
         }
-        .money-text { color: #2ecc71; }
-        .record-text { color: #3498db; }
+        .money-text { color: #10b981; }
+        .record-text { color: var(--primary); }
 
         /* 頁籤選單 */
         .tab-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
         .tab-button {
             padding: 12px 24px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: bold;
             cursor: pointer;
-            border: none;
-            background-color: #34495e;
-            color: #fff;
-            border-radius: 8px;
-            transition: 0.3s;
-        }
-        .tab-button.active { background-color: #f39c12; color: #1a252f; }
-        .tab-button:hover:not(.active) { background-color: #4a6572; }
-
-        .page-content { display: none; max-width: 900px; margin: 0 auto; }
-        .page-content.active { display: block; }
-
-        /* === 抽卡區 === */
-        .gacha-box {
-            text-align: center;
-            background: #2c3e50;
-            padding: 25px;
+            border: 1px solid var(--border-color);
+            background-color: var(--panel-bg);
+            color: var(--sub-text);
             border-radius: 10px;
-        }
-        .btn-gacha {
-            padding: 12px 25px;
-            font-size: 16px;
-            font-weight: bold;
-            border: none;
-            border-radius: 20px;
-            cursor: pointer;
-            margin: 10px;
             transition: 0.2s;
         }
-        .btn-single { background-color: #27ae60; color: white; }
-        .btn-ten { background-color: #e67e22; color: white; }
-        .btn-gacha:hover { transform: scale(1.05); }
+        .tab-button.active { background-color: var(--primary); color: #ffffff; border-color: var(--primary); }
+        .tab-button:hover:not(.active) { color: var(--text-color); }
 
+        .page-content { display: none; max-width: 950px; margin: 0 auto; }
+        .page-content.active { display: block; }
+
+        /* 區塊容器 */
+        .section-box {
+            background: var(--panel-bg);
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        /* 抽卡區塊 */
+        .gacha-box { text-align: center; }
+        .btn-gacha-group { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
+        .btn-gacha {
+            padding: 12px 28px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .btn-single { background-color: #10b981; color: white; }
+        .btn-ten { background-color: #f59e0b; color: white; }
+        .btn-gacha:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+        /* 球員卡片網格 */
         .card-grid {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 12px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
             margin-top: 20px;
         }
-        .card {
-            width: 140px;
-            background: #34495e;
-            border: 2px solid #bdc3c7;
-            border-radius: 8px;
-            padding: 10px;
-            text-align: center;
-        }
-        .card.batter { border-color: #e67e22; }
-        .card.pitcher { border-color: #2980b9; }
 
-        /* === 陣容與對戰區 === */
-        .section-box {
-            background: #2c3e50;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+        /* 豪華卡片樣式 */
+        .player-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            border: 2px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            animation: fadeIn 0.4s ease-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 140px;
         }
+        .player-card.batter { border-color: #f97316; }
+        .player-card.pitcher { border-color: #06b6d4; }
+        
+        .card-badge {
+            font-size: 11px;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 12px;
+            display: inline-block;
+            margin-bottom: 6px;
+            color: #fff;
+        }
+        .badge-batter { background: #f97316; }
+        .badge-pitcher { background: #06b6d4; }
+
+        .card-name {
+            font-size: 15px;
+            font-weight: bold;
+            color: var(--text-color);
+            margin: 6px 0 2px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .card-team {
+            font-size: 13px;
+            color: var(--sub-text);
+            font-weight: 500;
+        }
+
+        /* 對戰與陣容 */
         .lineup-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 15px;
             margin-top: 15px;
         }
         select {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             font-size: 14px;
-            border-radius: 4px;
-            background: #ecf0f1;
-            border: none;
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
             margin-top: 5px;
         }
         .btn-sim {
-            display: block;
             width: 100%;
-            padding: 15px;
-            font-size: 20px;
+            padding: 14px;
+            font-size: 18px;
             font-weight: bold;
-            background-color: #e74c3c;
+            background-color: #ef4444;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             margin-top: 15px;
             transition: 0.2s;
         }
-        .btn-sim:hover { background-color: #c0392b; }
-        .btn-playoff { background-color: #8e44ad; }
-        .btn-playoff:hover { background-color: #9b59b6; }
+        .btn-sim:hover { filter: brightness(1.1); }
+        .btn-playoff { background-color: #8b5cf6; }
 
-        /* 戰報播報面板 */
+        /* 播報日誌 */
         .game-log {
-            background: #111;
-            color: #00ff66;
-            font-family: monospace;
+            background: #000000;
+            color: #10b981;
+            font-family: 'Consolas', monospace;
             padding: 15px;
-            border-radius: 8px;
+            border-radius: 10px;
             height: 180px;
             overflow-y: auto;
             margin-top: 15px;
-            font-size: 14px;
-            line-height: 1.5;
+            font-size: 13px;
+            line-height: 1.6;
+            border: 1px solid #334155;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
         }
     </style>
 </head>
-<body>
+<body data-theme="dark">
 
-    <h1>⚾ MLB 球團總經理：賽事與抽卡系統</h1>
+    <!-- 上方控制項 (瀏覽所有球員/切換主題/語言) -->
+    <div class="top-bar">
+        <a href="mlbplayers.html" class="icon-btn">
+            🔍 <span id="btnViewPlayers">所有球員庫</span>
+        </a>
+        <button class="icon-btn" onclick="toggleTheme()">
+            <span id="themeIcon">🌙</span> <span id="themeText">切換淺色</span>
+        </button>
+        <button class="icon-btn" onclick="toggleLang()">
+            🌐 <span id="langText">English</span>
+        </button>
+    </div>
+
+    <h1 id="ui-title">⚾ MLB 球團總經理</h1>
 
     <!-- 儀表板 -->
     <div class="dashboard">
-        <div>💵 球團資金: <span id="userMoney" class="money-text">$1,000</span></div>
-        <div>🏆 例行賽戰績: <span id="userRecord" class="record-text">0 勝 - 0 敗</span></div>
+        <div>💵 <span id="ui-money-label">資金</span>: <span id="userMoney" class="money-text">$1,000</span></div>
+        <div>🏆 <span id="ui-record-label">戰績</span>: <span id="userRecord" class="record-text">0 勝 - 0 敗</span></div>
     </div>
 
     <!-- 頁籤選單 -->
     <div class="tab-container">
-        <button class="tab-button active" onclick="switchTab('gameTab', this)">⚔️ 排定陣容 & 模擬比賽</button>
-        <button class="tab-button" onclick="switchTab('gachaTab', this)">🎰 球員轉蛋抽卡</button>
-        <button class="tab-button" onclick="switchTab('inventoryTab', this)">🎒 我的球員背包</button>
+        <button class="tab-button active" onclick="switchTab('gameTab', this)" id="tab-btn-game">⚔️ 陣容 & 對戰</button>
+        <button class="tab-button" onclick="switchTab('gachaTab', this)" id="tab-btn-gacha">🎰 球員抽卡</button>
+        <button class="tab-button" onclick="switchTab('inventoryTab', this)" id="tab-btn-inventory">🎒 球員背包</button>
     </div>
 
-    <!-- 頁面一：模擬對戰與陣容排定 -->
+    <!-- 頁面一：陣容與對戰 -->
     <div id="gameTab" class="page-content active">
         <div class="section-box">
-            <h3>📋 排定先發陣容 (打線 1~9 棒 + 先發投手)</h3>
+            <h3 id="ui-lineup-title">📋 排定先發陣容</h3>
             <div class="lineup-grid">
                 <div>
-                    <label>🥎 先發投手 (SP):</label>
+                    <label id="ui-sp-label">🥎 先發投手 (SP):</label>
                     <select id="select-sp"></select>
                 </div>
-                <!-- 1 ~ 9 棒動態生成 -->
-                <div id="battersSelectGroup" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;"></div>
+                <div id="battersSelectGroup" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;"></div>
             </div>
         </div>
 
         <div class="section-box">
-            <h3>🏟️ 賽事模擬開打</h3>
-            <button class="btn-sim" onclick="simulateGame('regular')">⚾ 開始模擬例行賽 (贏球獎勵 $200)</button>
-            <button class="btn-sim btn-playoff" onclick="simulateGame('playoff')">🏆 開始季後賽挑戰 (需要 5 勝，贏球獎勵 $1,000)</button>
+            <h3 id="ui-sim-title">🏟️ 模擬賽事</h3>
+            <button class="btn-sim" onclick="simulateGame('regular')" id="ui-btn-regular">⚾ 開始模擬例行賽 (勝獎 $200)</button>
+            <button class="btn-sim btn-playoff" onclick="simulateGame('playoff')" id="ui-btn-playoff">🏆 開始季後賽挑戰 (需要 5 勝，勝獎 $1,000)</button>
 
-            <!-- 文字戰報 -->
-            <div id="gameLog" class="game-log">點擊上方按鈕開始模擬賽事...</div>
+            <div id="gameLog" class="game-log">準備開打...</div>
         </div>
     </div>
 
     <!-- 頁面二：抽卡區 -->
     <div id="gachaTab" class="page-content">
-        <div class="gacha-box">
-            <h2>球員卡池</h2>
-            <p>單抽 $100 | 十連抽 $1,000</p>
-            <button class="btn-gacha btn-single" onclick="drawGacha(1)">單抽 ⚾</button>
-            <button class="btn-gacha btn-ten" onclick="drawGacha(10)">十連抽 ⚡</button>
+        <div class="section-box gacha-box">
+            <h2 id="ui-gacha-title">球員卡池</h2>
+            <p id="ui-gacha-sub" style="color: var(--sub-text);">單抽 $100 | 十連抽 $1,000</p>
+            <div class="btn-gacha-group">
+                <button class="btn-gacha btn-single" onclick="drawGacha(1)" id="ui-btn-single">單抽 ⚾</button>
+                <button class="btn-gacha btn-ten" onclick="drawGacha(10)" id="ui-btn-ten">十連抽 ⚡</button>
+            </div>
 
             <div id="gachaResult" class="card-grid"></div>
         </div>
     </div>
 
-    <!-- 頁面三：背包庫 -->
+    <!-- 頁面三：背包區 -->
     <div id="inventoryTab" class="page-content">
         <div class="section-box">
-            <h3>🎒 目前擁有的球員</h3>
+            <h3 id="ui-inventory-title">🎒 目前擁有的球員</h3>
             <div id="inventoryGrid" class="card-grid"></div>
         </div>
     </div>
 
     <script>
+        let currentLang = 'zh'; // 'zh' 或 'en'
+        let currentTheme = 'dark'; // 'dark' 或 'light'
+
         let userMoney = 1000;
         let wins = 0;
         let losses = 0;
@@ -212,37 +320,134 @@
         let allBattersData = [];
         let allPitchersData = [];
 
-        let myBatters = []; // 玩家擁有的打者
-        let myPitchers = []; // 玩家擁有的投手
+        let myBatters = [];
+        let myPitchers = [];
 
-        // 預設預設基本球員 (避免剛開始背包為空)
-        const defaultBatter = { "NAME": "新秀打者", "TEAM": "自由球員", "HR": "5", "AVG": ".220" };
-        const defaultPitcher = { "NAME": "新秀投手", "TEAM": "自由球員", "ERA": "4.50", "SO": "30" };
+        // 語系字典
+        const i18n = {
+            zh: {
+                title: "⚾ MLB 球團總經理",
+                money: "球團資金",
+                record: "例行賽戰績",
+                btnViewPlayers: "所有球員庫",
+                tabGame: "⚔️ 陣容 & 對戰",
+                tabGacha: "🎰 球員抽卡",
+                tabInventory: "🎒 球員背包",
+                lineupTitle: "📋 排定先發陣容",
+                spLabel: "🥎 先發投手 (SP):",
+                batLabel: "第 {n} 棒:",
+                simTitle: "🏟️ 模擬賽事",
+                btnRegular: "⚾ 開始模擬例行賽 (勝獎 $200)",
+                btnPlayoff: "🏆 開始季後賽挑戰 (需 5 勝，勝獎 $1,000)",
+                gachaTitle: "球員卡池",
+                gachaSub: "單抽 $100 | 十連抽 $1,000",
+                btnSingle: "單抽 ⚾",
+                btnTen: "十連抽 ⚡",
+                inventoryTitle: "🎒 目前擁有的球員",
+                themeLight: "切換淺色",
+                themeDark: "切換深色",
+                batterBadge: "⚾ 打者",
+                pitcherBadge: "🥎 投手",
+                win: "勝",
+                loss: "敗",
+                noMoney: "球團資金不足！請先進行比賽賺取資金。",
+                noPlayoff: "季後賽資格不足！必須在例行賽先獲得 5 勝。"
+            },
+            en: {
+                title: "⚾ MLB Franchise Manager",
+                money: "Funds",
+                record: "Season Record",
+                btnViewPlayers: "All Players Database",
+                tabGame: "⚔️ Lineup & Game",
+                tabGacha: "🎰 Card Draft",
+                tabInventory: "🎒 My Roster",
+                lineupTitle: "📋 Set Starting Lineup",
+                spLabel: "🥎 Starting Pitcher (SP):",
+                batLabel: "Batting #{n}:",
+                simTitle: "🏟️ Game Simulation",
+                btnRegular: "⚾ Simulate Regular Game (Win +$200)",
+                btnPlayoff: "🏆 Playoff Challenge (Needs 5 Wins, Win +$1,000)",
+                gachaTitle: "Player Draft Pool",
+                gachaSub: "Single Draft $100 | 10x Draft $1,000",
+                btnSingle: "Single ⚾",
+                btnTen: "10x Draft ⚡",
+                inventoryTitle: "🎒 Current Roster",
+                themeLight: "Light Mode",
+                themeDark: "Dark Mode",
+                batterBadge: "⚾ Batter",
+                pitcherBadge: "🥎 Pitcher",
+                win: "W",
+                loss: "L",
+                noMoney: "Insufficient funds! Play games to earn cash.",
+                noPlayoff: "Not qualified! Requires 5 regular season wins."
+            }
+        };
 
         async function initGame() {
             try {
-                const bRes = await fetch('batter.json').then(res => res.json());
-                const pRes = await fetch('pitcher.json').then(res => res.json());
+                const bRes = await fetch('batter.json').then(res => res.json()).catch(() => null);
+                const pRes = await fetch('pitcher.json').then(res => res.json()).catch(() => null);
 
                 if (bRes) allBattersData = bRes.slice(1);
                 if (pRes) allPitchersData = pRes.slice(1);
 
-                // 給玩家初階基本球員
-                for(let i=0; i<9; i++) myBatters.push({ ...defaultBatter, NAME: `預設打者 ${i+1} 號` });
-                myPitchers.push({ ...defaultPitcher, NAME: "預設先發投手" });
+                // 給予初始球員
+                for(let i=1; i<=9; i++) {
+                    myBatters.push({ NAME: `Rookie Batter ${i}`, TEAM: "Free Agent" });
+                }
+                myPitchers.push({ NAME: "Rookie Pitcher", TEAM: "Free Agent" });
 
-                updateUI();
+                updateLangUI();
                 renderLineupSelects();
             } catch (err) {
-                console.error("資料讀取失敗:", err);
+                console.error("Data load error:", err);
             }
         }
 
-        // 抽卡功能
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', currentTheme);
+            document.getElementById('themeIcon').textContent = currentTheme === 'dark' ? '🌙' : '☀️';
+            document.getElementById('themeText').textContent = i18n[currentLang][currentTheme === 'dark' ? 'themeLight' : 'themeDark'];
+        }
+
+        function toggleLang() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            document.getElementById('langText').textContent = currentLang === 'zh' ? 'English' : '繁體中文';
+            updateLangUI();
+            renderLineupSelects();
+            if (document.getElementById('inventoryTab').classList.contains('active')) renderInventory();
+        }
+
+        function updateLangUI() {
+            const t = i18n[currentLang];
+            document.getElementById('ui-title').textContent = t.title;
+            document.getElementById('ui-money-label').textContent = t.money;
+            document.getElementById('ui-record-label').textContent = t.record;
+            document.getElementById('btnViewPlayers').textContent = t.btnViewPlayers;
+            document.getElementById('tab-btn-game').textContent = t.tabGame;
+            document.getElementById('tab-btn-gacha').textContent = t.tabGacha;
+            document.getElementById('tab-btn-inventory').textContent = t.tabInventory;
+            document.getElementById('ui-lineup-title').textContent = t.lineupTitle;
+            document.getElementById('ui-sp-label').textContent = t.spLabel;
+            document.getElementById('ui-sim-title').textContent = t.simTitle;
+            document.getElementById('ui-btn-regular').textContent = t.btnRegular;
+            document.getElementById('ui-btn-playoff').textContent = t.btnPlayoff;
+            document.getElementById('ui-gacha-title').textContent = t.gachaTitle;
+            document.getElementById('ui-gacha-sub').textContent = t.gachaSub;
+            document.getElementById('ui-btn-single').textContent = t.btnSingle;
+            document.getElementById('ui-btn-ten').textContent = t.btnTen;
+            document.getElementById('ui-inventory-title').textContent = t.inventoryTitle;
+            document.getElementById('themeText').textContent = t[currentTheme === 'dark' ? 'themeLight' : 'themeDark'];
+
+            updateUI();
+        }
+
         function drawGacha(count) {
+            const t = i18n[currentLang];
             const cost = count === 1 ? 100 : 1000;
             if (userMoney < cost) {
-                alert("球團資金不足！請先進行比賽賺取資金。");
+                alert(t.noMoney);
                 return;
             }
 
@@ -251,7 +456,7 @@
             resultBox.innerHTML = '';
 
             for (let i = 0; i < count; i++) {
-                const isBatter = Math.random() > 0.4; // 60% 機率打者，40% 投手
+                const isBatter = Math.random() > 0.4;
                 let p = null;
 
                 if (isBatter && allBattersData.length > 0) {
@@ -263,76 +468,82 @@
                 }
 
                 if (p) {
-                    const keys = Object.keys(p);
-                    const name = p[keys[0]] || '球員';
-                    const team = p[keys[1]] || '';
+                    const name = p.NAME || Object.values(p)[0] || 'Player';
+                    const team = p.TEAM || Object.values(p)[1] || 'Free Agent';
 
-                    const card = document.createElement('div');
-                    card.className = `card ${isBatter ? 'batter' : 'pitcher'}`;
-                    card.innerHTML = `
-                        <strong>${isBatter ? '⚾ 打者' : '🥎 投手'}</strong><br>
-                        <span style="font-size:16px;">${name}</span><br>
-                        <small>${team}</small>
-                    `;
+                    const card = createCardDOM(name, team, isBatter);
                     resultBox.appendChild(card);
                 }
             }
 
             updateUI();
             renderLineupSelects();
-            renderInventory();
         }
 
-        // 動態生成 1~9 棒選單
+        function createCardDOM(name, team, isBatter) {
+            const t = i18n[currentLang];
+            const card = document.createElement('div');
+            card.className = `player-card ${isBatter ? 'batter' : 'pitcher'}`;
+
+            card.innerHTML = `
+                <div>
+                    <span class="card-badge ${isBatter ? 'badge-batter' : 'badge-pitcher'}">
+                        ${isBatter ? t.batterBadge : t.pitcherBadge}
+                    </span>
+                    <div class="card-name" title="${name}">${name}</div>
+                </div>
+                <div class="card-team">🏢 ${team}</div>
+            `;
+            return card;
+        }
+
         function renderLineupSelects() {
             const group = document.getElementById('battersSelectGroup');
             group.innerHTML = '';
 
-            // 下拉投手
             const spSelect = document.getElementById('select-sp');
             spSelect.innerHTML = '';
             myPitchers.forEach((p, idx) => {
-                const name = Object.values(p)[0];
-                spSelect.innerHTML += `<option value="${idx}">${name}</option>`;
+                const name = p.NAME || Object.values(p)[0];
+                const team = p.TEAM || Object.values(p)[1] || '';
+                spSelect.innerHTML += `<option value="${idx}">${name} (${team})</option>`;
             });
 
-            // 下拉 1~9 棒打者
             for (let i = 1; i <= 9; i++) {
                 let optionsHtml = '';
                 myBatters.forEach((b, idx) => {
-                    const name = Object.values(b)[0];
-                    // 預設每棒選不一樣的人
+                    const name = b.NAME || Object.values(b)[0];
+                    const team = b.TEAM || Object.values(b)[1] || '';
                     const selected = (idx === (i - 1) % myBatters.length) ? 'selected' : '';
-                    optionsHtml += `<option value="${idx}" ${selected}>${name}</option>`;
+                    optionsHtml += `<option value="${idx}" ${selected}>${name} (${team})</option>`;
                 });
 
+                const labelText = i18n[currentLang].batLabel.replace('{n}', i);
                 group.innerHTML += `
                     <div>
-                        <label>第 ${i} 棒:</label>
+                        <label>${labelText}</label>
                         <select id="select-b${i}">${optionsHtml}</select>
                     </div>
                 `;
             }
         }
 
-        // 模擬比賽邏輯
         function simulateGame(type) {
+            const t = i18n[currentLang];
             if (type === 'playoff' && wins < 5) {
-                alert("季後賽資格不足！必須在例行賽先獲得 5 勝。");
+                alert(t.noPlayoff);
                 return;
             }
 
             const logBox = document.getElementById('gameLog');
-            logBox.innerHTML = `=== ${type === 'playoff' ? '🔥 季後賽' : '⚾ 例行賽'} 開打 ===<br>`;
+            logBox.innerHTML = `=== ${type === 'playoff' ? '🔥 Playoff' : '⚾ Regular Game'} ===<br>`;
 
-            // 簡單戰力計算 (隨機值 + 背包強度)
             let myPower = 50 + (myBatters.length * 2) + Math.floor(Math.random() * 40);
             let oppPower = type === 'playoff' ? 85 + Math.floor(Math.random() * 30) : 60 + Math.floor(Math.random() * 30);
 
             let myScore = 0;
             let oppScore = 0;
 
-            // 模擬 9 局比分
             for (let inning = 1; inning <= 9; inning++) {
                 let myInningRun = Math.random() * myPower > 45 ? Math.floor(Math.random() * 3) : 0;
                 let oppInningRun = Math.random() * oppPower > 45 ? Math.floor(Math.random() * 3) : 0;
@@ -341,51 +552,52 @@
                 oppScore += oppInningRun;
 
                 if (myInningRun > 0 || oppInningRun > 0) {
-                    logBox.innerHTML += `第 ${inning} 局：我方 +${myInningRun} 分 | 對手 +${oppInningRun} 分<br>`;
+                    logBox.innerHTML += `Inning ${inning}: Team +${myInningRun} | Opponent +${oppInningRun}<br>`;
                 }
             }
 
-            // 平局自動打延長賽
             if (myScore === oppScore) {
                 myScore += Math.random() > 0.5 ? 1 : 0;
                 oppScore += (myScore === oppScore) ? 1 : 0;
             }
 
-            logBox.innerHTML += `<br><strong>比賽結束！最終比分：我方 ${myScore} vs ${oppScore} 對手</strong><br>`;
+            logBox.innerHTML += `<br><strong>FINAL SCORE: Team ${myScore} - ${oppScore} Opponent</strong><br>`;
 
             if (myScore > oppScore) {
                 const reward = type === 'playoff' ? 1000 : 200;
                 wins++;
                 userMoney += reward;
-                logBox.innerHTML += `<span style="color:#00ff66;">🎉 贏得比賽！戰績 +1 勝，獎勵金 +$${reward}！</span><br>`;
+                logBox.innerHTML += `<span style="color:#10b981;">🎉 WIN! +1 W, Reward +$${reward}!</span><br>`;
             } else {
                 losses++;
                 userMoney += 50;
-                logBox.innerHTML += `<span style="color:#ff4d4d;">❌ 遺憾吞敗！獲得參賽補助金 +$50。</span><br>`;
+                logBox.innerHTML += `<span style="color:#ef4444;">❌ LOSS! Compensation +$50.</span><br>`;
             }
 
             logBox.scrollTop = logBox.scrollHeight;
             updateUI();
         }
 
-        // 渲染背包庫
         function renderInventory() {
             const grid = document.getElementById('inventoryGrid');
             grid.innerHTML = '';
 
             myBatters.forEach(b => {
-                const name = Object.values(b)[0];
-                grid.innerHTML += `<div class="card batter">⚾ 打者<br><strong>${name}</strong></div>`;
+                const name = b.NAME || Object.values(b)[0];
+                const team = b.TEAM || Object.values(b)[1] || 'Free Agent';
+                grid.appendChild(createCardDOM(name, team, true));
             });
             myPitchers.forEach(p => {
-                const name = Object.values(p)[0];
-                grid.innerHTML += `<div class="card pitcher">🥎 投手<br><strong>${name}</strong></div>`;
+                const name = p.NAME || Object.values(p)[0];
+                const team = p.TEAM || Object.values(p)[1] || 'Free Agent';
+                grid.appendChild(createCardDOM(name, team, false));
             });
         }
 
         function updateUI() {
+            const t = i18n[currentLang];
             document.getElementById('userMoney').textContent = `$${userMoney.toLocaleString()}`;
-            document.getElementById('userRecord').textContent = `${wins} 勝 - ${losses} 敗`;
+            document.getElementById('userRecord').textContent = `${wins} ${t.win} - ${losses} ${t.loss}`;
         }
 
         function switchTab(tabId, btn) {
