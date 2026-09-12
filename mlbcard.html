@@ -5,15 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MLB Manager & Gacha Game</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800;900&family=Noto+Sans+TC:wght@500;700;900&display=swap');
+
         :root {
-            --bg-color: #0f172a;
-            --panel-bg: #1e293b;
+            --bg-color: #0b1319;
+            --panel-bg: #111c24;
             --text-color: #f8fafc;
             --sub-text: #94a3b8;
             --primary: #3b82f6;
             --accent: #f59e0b;
-            --card-bg: #334155;
-            --border-color: #475569;
+            --card-bg: #16222f;
+            --border-color: #243447;
+
+            /* 稀有度色彩 */
+            --rarity-ssr: #ef4444;
+            --rarity-sr: #a855f7;
+            --rarity-r: #3b82f6;
+            --rarity-a: #10b981;
+            --rarity-b: #64748b;
         }
 
         [data-theme="light"] {
@@ -23,13 +32,13 @@
             --sub-text: #64748b;
             --primary: #2563eb;
             --accent: #d97706;
-            --card-bg: #f8fafc;
+            --card-bg: #ffffff;
             --border-color: #cbd5e1;
         }
 
         * { box-sizing: border-box; transition: background-color 0.3s, color 0.3s; }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Noto Sans TC', 'Segoe UI', sans-serif;
             margin: 0;
             padding: 20px;
             background-color: var(--bg-color);
@@ -63,7 +72,7 @@
         .btn-danger { border-color: #ef4444; color: #ef4444; }
         .btn-danger:hover { background: #ef4444; color: white; }
 
-        h1 { text-align: center; color: var(--accent); margin: 0 0 20px 0; font-size: 28px; }
+        h1 { text-align: center; color: var(--accent); margin: 0 0 20px 0; font-size: 28px; font-family: 'Orbitron', sans-serif; }
 
         .dashboard {
             display: flex;
@@ -144,57 +153,102 @@
         .btn-ten { background-color: #f59e0b; color: white; }
         .btn-gacha:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
+        /* 卡牌網格 */
         .card-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 15px;
             margin-top: 20px;
         }
 
+        /* 🖼️ 極簡電競風格手遊卡牌 UI */
         .player-card {
             background: var(--card-bg);
             border-radius: 12px;
-            padding: 12px;
+            padding: 12px 10px;
             text-align: center;
             border: 2px solid var(--border-color);
             position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
             animation: fadeIn 0.4s ease-out;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            min-height: 140px;
+            height: 190px;
+            user-select: none;
         }
-        .player-card.batter { border-color: #f97316; }
-        .player-card.pitcher { border-color: #06b6d4; }
-        
-        .card-badge {
-            font-size: 11px;
-            font-weight: bold;
-            padding: 3px 8px;
-            border-radius: 12px;
-            display: inline-block;
-            margin-bottom: 6px;
-            color: #fff;
-        }
-        .badge-batter { background: #f97316; }
-        .badge-pitcher { background: #06b6d4; }
 
-        .card-name {
-            font-size: 15px;
-            font-weight: bold;
-            color: var(--text-color);
-            margin: 6px 0 2px 0;
+        /* 稀有度邊框色 */
+        .card-ssr { border-color: var(--rarity-ssr); box-shadow: 0 0 12px rgba(239, 68, 68, 0.35); }
+        .card-sr  { border-color: var(--rarity-sr);  box-shadow: 0 0 10px rgba(168, 85, 247, 0.3); }
+        .card-r   { border-color: var(--rarity-r);   }
+        .card-a   { border-color: var(--rarity-a);   }
+        .card-b   { border-color: var(--rarity-b);   }
+
+        /* 卡牌頂部：稀有度標籤 */
+        .card-top {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        .rarity-badge {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            font-size: 11px;
+            padding: 2px 7px;
+            border-radius: 4px;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+        .bg-ssr { background: var(--rarity-ssr); }
+        .bg-sr  { background: var(--rarity-sr); }
+        .bg-r   { background: var(--rarity-r); }
+        .bg-a   { background: var(--rarity-a); }
+        .bg-b   { background: var(--rarity-b); }
+
+        /* 卡牌中央：球隊與球員名 */
+        .card-center {
+            margin: auto 0;
+        }
+        .team-logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 26px;
+            font-weight: 900;
+            color: #e2e8f0;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .card-player-name {
+            font-size: 13px;
+            font-weight: 700;
+            color: #ffffff;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .card-team {
-            font-size: 13px;
-            color: var(--sub-text);
-            font-weight: 500;
+        .card-player-team {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 2px;
         }
+
+        /* 卡牌底部：僅保留 OVR */
+        .card-bottom {
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding-top: 6px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .stat-box {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .stat-label { color: #64748b; font-size: 10px; font-weight: 700; }
+        .stat-val-ovr { color: #f59e0b; font-weight: 900; font-size: 15px; }
 
         .lineup-grid {
             display: grid;
@@ -243,7 +297,7 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.9); }
+            from { opacity: 0; transform: scale(0.92); }
             to { opacity: 1; transform: scale(1); }
         }
     </style>
@@ -360,8 +414,6 @@
                 inventoryTitle: "🎒 目前擁有的球員",
                 themeLight: "切換淺色",
                 themeDark: "切換深色",
-                batterBadge: "⚾ 打者",
-                pitcherBadge: "🥎 投手",
                 win: "勝",
                 loss: "敗",
                 noMoney: "資金不足！請先比賽賺取獎金。",
@@ -393,8 +445,6 @@
                 inventoryTitle: "🎒 Current Roster",
                 themeLight: "Light Mode",
                 themeDark: "Dark Mode",
-                batterBadge: "⚾ Batter",
-                pitcherBadge: "🥎 Pitcher",
                 win: "W",
                 loss: "L",
                 noMoney: "Insufficient funds!",
@@ -403,13 +453,50 @@
             }
         };
 
+        // 📊 1. 打者 OVR 計算公式 (基於 wRC+, WAR, OBP, SLG, Off)
+        function calculateBatterOVR(data) {
+            const wRC = parseFloat(data["wRC+"] || data.wRC) || 100;
+            const war = parseFloat(data.WAR) || 0;
+            const obp = parseFloat(data.OBP) || 0.320;
+            const slg = parseFloat(data.SLG) || 0.400;
+            const off = parseFloat(data.Off) || 0;
+
+            // 以標準聯盟平均為基準推算能力值
+            let score = 65 + ((wRC - 100) * 0.25) + (war * 3.5) + ((obp - 0.320) * 80) + ((slg - 0.400) * 50) + (off * 0.3);
+            let ovr = Math.round(score);
+
+            return Math.min(Math.max(ovr, 60), 99); // 限制在 60~99
+        }
+
+        // 📊 2. 投手 OVR 計算公式 (基於 WAR, ERA, FIP, K/9)
+        function calculatePitcherOVR(data) {
+            const war = parseFloat(data.WAR) || 0;
+            const era = parseFloat(data.ERA) || 4.20;
+            const fip = parseFloat(data.FIP) || 4.20;
+            const k9 = parseFloat(data["K/9"]) || 8.0;
+
+            let score = 65 + (war * 4.0) + ((4.20 - era) * 6) + ((4.20 - fip) * 4) + ((k9 - 8.0) * 1.5);
+            let ovr = Math.round(score);
+
+            return Math.min(Math.max(ovr, 60), 99); // 限制在 60~99
+        }
+
+        // 🌟 3. OVR 自動轉化為卡牌稀有度 (SSR, SR, R, A, B)
+        function getRarityFromOVR(ovr) {
+            if (ovr >= 90) return "SSR";
+            if (ovr >= 83) return "SR";
+            if (ovr >= 76) return "R";
+            if (ovr >= 70) return "A";
+            return "B";
+        }
+
         async function initGame() {
             try {
                 const bRes = await fetch('batter.json').then(res => res.json()).catch(() => null);
                 const pRes = await fetch('pitcher.json').then(res => res.json()).catch(() => null);
 
-                if (bRes) allBattersData = bRes.slice(1);
-                if (pRes) allPitchersData = pRes.slice(1);
+                if (bRes) allBattersData = Array.isArray(bRes) ? bRes : Object.values(bRes);
+                if (pRes) allPitchersData = Array.isArray(pRes) ? pRes : Object.values(pRes);
 
                 loadSaveData();
                 updateLangUI();
@@ -419,17 +506,8 @@
             }
         }
 
-        // 本地存檔系統
         function saveGameData() {
-            const gameData = {
-                userMoney,
-                season,
-                wins,
-                losses,
-                myBatters,
-                myPitchers,
-                currentLineup
-            };
+            const gameData = { userMoney, season, wins, losses, myBatters, myPitchers, currentLineup };
             localStorage.setItem('mlb_game_save', JSON.stringify(gameData));
         }
 
@@ -445,9 +523,9 @@
                 myPitchers = parsed.myPitchers || [];
                 currentLineup = parsed.currentLineup || { sp: 0, batters: [0,1,2,3,4,5,6,7,8] };
             } else {
-                // 預設初學者球員
-                myBatters = Array.from({length: 9}, (_, i) => ({ NAME: `Rookie Batter ${i+1}`, TEAM: "Free Agent" }));
-                myPitchers = [{ NAME: "Rookie Pitcher", TEAM: "Free Agent" }];
+                // 預設給予初始菜鳥陣容
+                myBatters = Array.from({length: 9}, (_, i) => ({ NAME: `Rookie Batter ${i+1}`, TEAM: "FA", OVR: 68, RARITY: "B" }));
+                myPitchers = [{ NAME: "Rookie Pitcher", TEAM: "FA", OVR: 68, RARITY: "B" }];
                 saveGameData();
             }
         }
@@ -459,7 +537,6 @@
             }
         }
 
-        // 自動排陣機制
         function autoFillLineup() {
             if (myPitchers.length > 0) currentLineup.sp = 0;
             for (let i = 0; i < 9; i++) {
@@ -538,20 +615,26 @@
 
             for (let i = 0; i < count; i++) {
                 const isBatter = Math.random() > 0.35;
-                let p = null;
+                let rawData = isBatter ? allBattersData : allPitchersData;
 
-                if (isBatter && allBattersData.length > 0) {
-                    p = allBattersData[Math.floor(Math.random() * allBattersData.length)];
-                    myBatters.push(p);
-                } else if (allPitchersData.length > 0) {
-                    p = allPitchersData[Math.floor(Math.random() * allPitchersData.length)];
-                    myPitchers.push(p);
-                }
+                if (rawData && rawData.length > 0) {
+                    let base = rawData[Math.floor(Math.random() * rawData.length)];
+                    
+                    // 根據數據計算 OVR 與稀有度
+                    let ovr = isBatter ? calculateBatterOVR(base) : calculatePitcherOVR(base);
+                    let rarity = getRarityFromOVR(ovr);
 
-                if (p) {
-                    const name = p.NAME || Object.values(p)[0] || 'Player';
-                    const team = p.TEAM || Object.values(p)[1] || 'Free Agent';
-                    resultBox.appendChild(createCardDOM(name, team, isBatter));
+                    let player = {
+                        NAME: base.Name || base.NAME || 'Player',
+                        TEAM: base.Team || base.TEAM || 'FA',
+                        OVR: ovr,
+                        RARITY: rarity
+                    };
+
+                    if (isBatter) myBatters.push(player);
+                    else myPitchers.push(player);
+
+                    resultBox.appendChild(createCardDOM(player));
                 }
             }
 
@@ -560,18 +643,27 @@
             renderLineupSelects();
         }
 
-        function createCardDOM(name, team, isBatter) {
-            const t = i18n[currentLang];
+        // 🖼️ 建立無 Level 1 與守備位置的質感卡牌 DOM
+        function createCardDOM(p) {
             const card = document.createElement('div');
-            card.className = `player-card ${isBatter ? 'batter' : 'pitcher'}`;
+            const rarity = (p.RARITY || 'R').toLowerCase();
+            card.className = `player-card card-${rarity}`;
+
             card.innerHTML = `
-                <div>
-                    <span class="card-badge ${isBatter ? 'badge-batter' : 'badge-pitcher'}">
-                        ${isBatter ? t.batterBadge : t.pitcherBadge}
-                    </span>
-                    <div class="card-name" title="${name}">${name}</div>
+                <div class="card-top">
+                    <span class="rarity-badge bg-${rarity}">${p.RARITY || 'R'}</span>
                 </div>
-                <div class="card-team">🏢 ${team}</div>
+                <div class="card-center">
+                    <div class="team-logo-text">${p.TEAM || 'FA'}</div>
+                    <div class="card-player-name">${p.NAME || 'Player'}</div>
+                    <div class="card-player-team">${p.TEAM || 'FA'}</div>
+                </div>
+                <div class="card-bottom">
+                    <div class="stat-box">
+                        <span class="stat-label">OVR</span>
+                        <span class="stat-val-ovr">${p.OVR || 75}</span>
+                    </div>
+                </div>
             `;
             return card;
         }
@@ -583,20 +675,16 @@
             const spSelect = document.getElementById('select-sp');
             spSelect.innerHTML = '';
             myPitchers.forEach((p, idx) => {
-                const name = p.NAME || Object.values(p)[0];
-                const team = p.TEAM || Object.values(p)[1] || '';
                 const selected = idx === currentLineup.sp ? 'selected' : '';
-                spSelect.innerHTML += `<option value="${idx}" ${selected}>${name} (${team})</option>`;
+                spSelect.innerHTML += `<option value="${idx}" ${selected}>${p.NAME} (${p.TEAM}) - OVR ${p.OVR||70}</option>`;
             });
 
             for (let i = 1; i <= 9; i++) {
                 let optionsHtml = '';
                 const currentSelectedIdx = currentLineup.batters[i - 1] ?? ((i - 1) % myBatters.length);
                 myBatters.forEach((b, idx) => {
-                    const name = b.NAME || Object.values(b)[0];
-                    const team = b.TEAM || Object.values(b)[1] || '';
                     const selected = (idx === currentSelectedIdx) ? 'selected' : '';
-                    optionsHtml += `<option value="${idx}" ${selected}>${name} (${team})</option>`;
+                    optionsHtml += `<option value="${idx}" ${selected}>${b.NAME} (${b.TEAM}) - OVR ${b.OVR||70}</option>`;
                 });
 
                 const labelText = i18n[currentLang].batLabel.replace('{n}', i);
@@ -609,7 +697,6 @@
             }
         }
 
-        // 模擬賽事機制（含 162 場限制與季後賽）
         function simulateGame(count = 1) {
             const t = i18n[currentLang];
             const totalPlayed = wins + losses;
@@ -624,7 +711,6 @@
 
             let addedWins = 0;
             let addedLosses = 0;
-
             const gamesToPlay = Math.min(count, TOTAL_SEASON_GAMES - totalPlayed);
 
             for (let g = 0; g < gamesToPlay; g++) {
@@ -660,7 +746,6 @@
             updateUI();
         }
 
-        // 季後賽 (7戰4勝)
         function startPlayoffs() {
             const t = i18n[currentLang];
             if (wins + losses < TOTAL_SEASON_GAMES || wins < 81) {
@@ -701,7 +786,6 @@
                 logBox.innerHTML += `<br><span style="color:#ef4444; font-weight:bold;">💔 季後賽遺憾淘汰，獲得亞軍獎勵 $500！</span><br>`;
             }
 
-            // 進步到下個賽季
             season++;
             wins = 0;
             losses = 0;
@@ -715,16 +799,8 @@
             const grid = document.getElementById('inventoryGrid');
             grid.innerHTML = '';
 
-            myBatters.forEach(b => {
-                const name = b.NAME || Object.values(b)[0];
-                const team = b.TEAM || Object.values(b)[1] || 'Free Agent';
-                grid.appendChild(createCardDOM(name, team, true));
-            });
-            myPitchers.forEach(p => {
-                const name = p.NAME || Object.values(p)[0];
-                const team = p.TEAM || Object.values(p)[1] || 'Free Agent';
-                grid.appendChild(createCardDOM(name, team, false));
-            });
+            myBatters.forEach(b => grid.appendChild(createCardDOM(b)));
+            myPitchers.forEach(p => grid.appendChild(createCardDOM(p)));
         }
 
         function updateUI() {
