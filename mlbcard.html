@@ -36,7 +36,6 @@
             color: var(--text-color);
         }
 
-        /* 頂部工具列 (捷徑/模式/語言切換) */
         .top-bar {
             display: flex;
             justify-content: flex-end;
@@ -61,10 +60,11 @@
             text-decoration: none;
         }
         .icon-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-danger { border-color: #ef4444; color: #ef4444; }
+        .btn-danger:hover { background: #ef4444; color: white; }
 
         h1 { text-align: center; color: var(--accent); margin: 0 0 20px 0; font-size: 28px; }
 
-        /* 頂部資產與勝績儀表板 */
         .dashboard {
             display: flex;
             justify-content: space-around;
@@ -75,13 +75,14 @@
             margin: 0 auto 20px auto;
             border: 1px solid var(--border-color);
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
+            flex-wrap: wrap;
+            gap: 10px;
         }
         .money-text { color: #10b981; }
         .record-text { color: var(--primary); }
 
-        /* 頁籤選單 */
         .tab-container { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
         .tab-button {
             padding: 12px 24px;
@@ -100,7 +101,6 @@
         .page-content { display: none; max-width: 950px; margin: 0 auto; }
         .page-content.active { display: block; }
 
-        /* 區塊容器 */
         .section-box {
             background: var(--panel-bg);
             padding: 24px;
@@ -110,7 +110,24 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
-        /* 抽卡區塊 */
+        .lineup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .btn-auto-fill {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-auto-fill:hover { filter: brightness(1.1); transform: scale(1.05); }
+
         .gacha-box { text-align: center; }
         .btn-gacha-group { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
         .btn-gacha {
@@ -127,7 +144,6 @@
         .btn-ten { background-color: #f59e0b; color: white; }
         .btn-gacha:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
-        /* 球員卡片網格 */
         .card-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -135,7 +151,6 @@
             margin-top: 20px;
         }
 
-        /* 豪華卡片樣式 */
         .player-card {
             background: var(--card-bg);
             border-radius: 12px;
@@ -181,12 +196,10 @@
             font-weight: 500;
         }
 
-        /* 對戰與陣容 */
         .lineup-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 15px;
-            margin-top: 15px;
         }
         select {
             width: 100%;
@@ -198,30 +211,30 @@
             border: 1px solid var(--border-color);
             margin-top: 5px;
         }
+        .sim-btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
         .btn-sim {
-            width: 100%;
+            flex: 1;
             padding: 14px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             background-color: #ef4444;
             color: white;
             border: none;
             border-radius: 10px;
             cursor: pointer;
-            margin-top: 15px;
             transition: 0.2s;
+            min-width: 200px;
         }
         .btn-sim:hover { filter: brightness(1.1); }
         .btn-playoff { background-color: #8b5cf6; }
 
-        /* 播報日誌 */
         .game-log {
             background: #000000;
             color: #10b981;
             font-family: 'Consolas', monospace;
             padding: 15px;
             border-radius: 10px;
-            height: 180px;
+            height: 200px;
             overflow-y: auto;
             margin-top: 15px;
             font-size: 13px;
@@ -237,42 +250,37 @@
 </head>
 <body data-theme="dark">
 
-    <!-- 上方控制項 (瀏覽所有球員/切換主題/語言) -->
     <div class="top-bar">
-        <a href="mlbplayers.html" class="icon-btn">
-            🔍 <span id="btnViewPlayers">所有球員庫</span>
-        </a>
-        <button class="icon-btn" onclick="toggleTheme()">
-            <span id="themeIcon">🌙</span> <span id="themeText">切換淺色</span>
-        </button>
-        <button class="icon-btn" onclick="toggleLang()">
-            🌐 <span id="langText">English</span>
-        </button>
+        <a href="mlbplayers.html" class="icon-btn">🔍 <span id="btnViewPlayers">所有球員庫</span></a>
+        <button class="icon-btn" onclick="toggleTheme()"><span id="themeIcon">🌙</span> <span id="themeText">切換淺色</span></button>
+        <button class="icon-btn" onclick="toggleLang()">🌐 <span id="langText">English</span></button>
+        <button class="icon-btn btn-danger" onclick="resetGameData()">🗑️ <span id="btnReset">重置存檔</span></button>
     </div>
 
     <h1 id="ui-title">⚾ MLB 球團總經理</h1>
 
-    <!-- 儀表板 -->
     <div class="dashboard">
         <div>💵 <span id="ui-money-label">資金</span>: <span id="userMoney" class="money-text">$1,000</span></div>
-        <div>🏆 <span id="ui-record-label">戰績</span>: <span id="userRecord" class="record-text">0 勝 - 0 敗</span></div>
+        <div>📅 <span id="ui-season-label">賽季</span>: <span id="seasonNum">1</span></div>
+        <div>🏆 <span id="ui-record-label">例行賽戰績</span>: <span id="userRecord" class="record-text">0 勝 - 0 敗 (場次 0/162)</span></div>
     </div>
 
-    <!-- 頁籤選單 -->
     <div class="tab-container">
         <button class="tab-button active" onclick="switchTab('gameTab', this)" id="tab-btn-game">⚔️ 陣容 & 對戰</button>
         <button class="tab-button" onclick="switchTab('gachaTab', this)" id="tab-btn-gacha">🎰 球員抽卡</button>
         <button class="tab-button" onclick="switchTab('inventoryTab', this)" id="tab-btn-inventory">🎒 球員背包</button>
     </div>
 
-    <!-- 頁面一：陣容與對戰 -->
     <div id="gameTab" class="page-content active">
         <div class="section-box">
-            <h3 id="ui-lineup-title">📋 排定先發陣容</h3>
+            <div class="lineup-header">
+                <h3 id="ui-lineup-title" style="margin:0;">📋 排定先發陣容</h3>
+                <button class="btn-auto-fill" onclick="autoFillLineup()" id="ui-btn-autofill">⚡ 自動最佳陣容</button>
+            </div>
             <div class="lineup-grid">
                 <div>
                     <label id="ui-sp-label">🥎 先發投手 (SP):</label>
-                    <select id="select-sp"></select>
+                    <select id="select-sp" onchange="saveSelectedLineup()"></select>
                 </div>
                 <div id="battersSelectGroup" style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;"></div>
             </div>
@@ -280,14 +288,16 @@
 
         <div class="section-box">
             <h3 id="ui-sim-title">🏟️ 模擬賽事</h3>
-            <button class="btn-sim" onclick="simulateGame('regular')" id="ui-btn-regular">⚾ 開始模擬例行賽 (勝獎 $200)</button>
-            <button class="btn-sim btn-playoff" onclick="simulateGame('playoff')" id="ui-btn-playoff">🏆 開始季後賽挑戰 (需要 5 勝，勝獎 $1,000)</button>
+            <div class="sim-btn-group">
+                <button class="btn-sim" onclick="simulateGame(1)" id="ui-btn-regular-1">⚾ 模擬 1 場例行賽</button>
+                <button class="btn-sim" onclick="simulateGame(10)" id="ui-btn-regular-10" style="background-color:#059669;">⚡ 快速模擬 10 場</button>
+                <button class="btn-sim btn-playoff" onclick="startPlayoffs()" id="ui-btn-playoff">🏆 挑戰世界大賽 (需 162 場且 81+ 勝)</button>
+            </div>
 
-            <div id="gameLog" class="game-log">準備開打...</div>
+            <div id="gameLog" class="game-log">賽季準備就緒，點擊按鈕開始模擬...</div>
         </div>
     </div>
 
-    <!-- 頁面二：抽卡區 -->
     <div id="gachaTab" class="page-content">
         <div class="section-box gacha-box">
             <h2 id="ui-gacha-title">球員卡池</h2>
@@ -296,12 +306,10 @@
                 <button class="btn-gacha btn-single" onclick="drawGacha(1)" id="ui-btn-single">單抽 ⚾</button>
                 <button class="btn-gacha btn-ten" onclick="drawGacha(10)" id="ui-btn-ten">十連抽 ⚡</button>
             </div>
-
             <div id="gachaResult" class="card-grid"></div>
         </div>
     </div>
 
-    <!-- 頁面三：背包區 -->
     <div id="inventoryTab" class="page-content">
         <div class="section-box">
             <h3 id="ui-inventory-title">🎒 目前擁有的球員</h3>
@@ -310,35 +318,41 @@
     </div>
 
     <script>
-        let currentLang = 'zh'; // 'zh' 或 'en'
-        let currentTheme = 'dark'; // 'dark' 或 'light'
+        let currentLang = 'zh';
+        let currentTheme = 'dark';
 
         let userMoney = 1000;
+        let season = 1;
         let wins = 0;
         let losses = 0;
+        const TOTAL_SEASON_GAMES = 162;
 
         let allBattersData = [];
         let allPitchersData = [];
 
         let myBatters = [];
         let myPitchers = [];
+        let currentLineup = { sp: 0, batters: [0, 1, 2, 3, 4, 5, 6, 7, 8] };
 
-        // 語系字典
         const i18n = {
             zh: {
                 title: "⚾ MLB 球團總經理",
                 money: "球團資金",
+                season: "第 {n} 賽季",
                 record: "例行賽戰績",
                 btnViewPlayers: "所有球員庫",
+                btnReset: "重置存檔",
                 tabGame: "⚔️ 陣容 & 對戰",
                 tabGacha: "🎰 球員抽卡",
                 tabInventory: "🎒 球員背包",
                 lineupTitle: "📋 排定先發陣容",
+                btnAutoFill: "⚡ 自動最佳陣容",
                 spLabel: "🥎 先發投手 (SP):",
                 batLabel: "第 {n} 棒:",
                 simTitle: "🏟️ 模擬賽事",
-                btnRegular: "⚾ 開始模擬例行賽 (勝獎 $200)",
-                btnPlayoff: "🏆 開始季後賽挑戰 (需 5 勝，勝獎 $1,000)",
+                btnRegular1: "⚾ 模擬 1 場例行賽",
+                btnRegular10: "⚡ 快速模擬 10 場",
+                btnPlayoff: "🏆 進入季後賽 (需滿162場且勝率>50%)",
                 gachaTitle: "球員卡池",
                 gachaSub: "單抽 $100 | 十連抽 $1,000",
                 btnSingle: "單抽 ⚾",
@@ -350,23 +364,28 @@
                 pitcherBadge: "🥎 投手",
                 win: "勝",
                 loss: "敗",
-                noMoney: "球團資金不足！請先進行比賽賺取資金。",
-                noPlayoff: "季後賽資格不足！必須在例行賽先獲得 5 勝。"
+                noMoney: "資金不足！請先比賽賺取獎金。",
+                seasonEnd: "例行賽 162 場已結束！請進入季後賽挑戰或進行新賽季。",
+                notQualified: "未達季後賽門檻！例行賽需滿 162 場且獲得 81 勝以上。"
             },
             en: {
                 title: "⚾ MLB Franchise Manager",
                 money: "Funds",
-                record: "Season Record",
-                btnViewPlayers: "All Players Database",
+                season: "Season {n}",
+                record: "Regular Season Record",
+                btnViewPlayers: "Database",
+                btnReset: "Reset Data",
                 tabGame: "⚔️ Lineup & Game",
                 tabGacha: "🎰 Card Draft",
                 tabInventory: "🎒 My Roster",
                 lineupTitle: "📋 Set Starting Lineup",
+                btnAutoFill: "⚡ Auto Best Lineup",
                 spLabel: "🥎 Starting Pitcher (SP):",
                 batLabel: "Batting #{n}:",
                 simTitle: "🏟️ Game Simulation",
-                btnRegular: "⚾ Simulate Regular Game (Win +$200)",
-                btnPlayoff: "🏆 Playoff Challenge (Needs 5 Wins, Win +$1,000)",
+                btnRegular1: "⚾ Sim 1 Game",
+                btnRegular10: "⚡ Sim 10 Games",
+                btnPlayoff: "🏆 Enter Playoffs (Needs 162 Games & >50% Win Rate)",
                 gachaTitle: "Player Draft Pool",
                 gachaSub: "Single Draft $100 | 10x Draft $1,000",
                 btnSingle: "Single ⚾",
@@ -378,8 +397,9 @@
                 pitcherBadge: "🥎 Pitcher",
                 win: "W",
                 loss: "L",
-                noMoney: "Insufficient funds! Play games to earn cash.",
-                noPlayoff: "Not qualified! Requires 5 regular season wins."
+                noMoney: "Insufficient funds!",
+                seasonEnd: "162 Season games completed! Enter Playoffs now.",
+                notQualified: "Not qualified! Requires 162 games & 81+ Wins."
             }
         };
 
@@ -391,17 +411,74 @@
                 if (bRes) allBattersData = bRes.slice(1);
                 if (pRes) allPitchersData = pRes.slice(1);
 
-                // 給予初始球員
-                for(let i=1; i<=9; i++) {
-                    myBatters.push({ NAME: `Rookie Batter ${i}`, TEAM: "Free Agent" });
-                }
-                myPitchers.push({ NAME: "Rookie Pitcher", TEAM: "Free Agent" });
-
+                loadSaveData();
                 updateLangUI();
                 renderLineupSelects();
             } catch (err) {
                 console.error("Data load error:", err);
             }
+        }
+
+        // 本地存檔系統
+        function saveGameData() {
+            const gameData = {
+                userMoney,
+                season,
+                wins,
+                losses,
+                myBatters,
+                myPitchers,
+                currentLineup
+            };
+            localStorage.setItem('mlb_game_save', JSON.stringify(gameData));
+        }
+
+        function loadSaveData() {
+            const data = localStorage.getItem('mlb_game_save');
+            if (data) {
+                const parsed = JSON.parse(data);
+                userMoney = parsed.userMoney ?? 1000;
+                season = parsed.season ?? 1;
+                wins = parsed.wins ?? 0;
+                losses = parsed.losses ?? 0;
+                myBatters = parsed.myBatters || [];
+                myPitchers = parsed.myPitchers || [];
+                currentLineup = parsed.currentLineup || { sp: 0, batters: [0,1,2,3,4,5,6,7,8] };
+            } else {
+                // 預設初學者球員
+                myBatters = Array.from({length: 9}, (_, i) => ({ NAME: `Rookie Batter ${i+1}`, TEAM: "Free Agent" }));
+                myPitchers = [{ NAME: "Rookie Pitcher", TEAM: "Free Agent" }];
+                saveGameData();
+            }
+        }
+
+        function resetGameData() {
+            if (confirm("確定要重置所有遊戲進度嗎？（資金、球員與戰績將全部歸零）")) {
+                localStorage.removeItem('mlb_game_save');
+                location.reload();
+            }
+        }
+
+        // 自動排陣機制
+        function autoFillLineup() {
+            if (myPitchers.length > 0) currentLineup.sp = 0;
+            for (let i = 0; i < 9; i++) {
+                if (i < myBatters.length) currentLineup.batters[i] = i;
+            }
+            renderLineupSelects();
+            saveGameData();
+            alert("已自動排定最佳陣容！");
+        }
+
+        function saveSelectedLineup() {
+            const spSelect = document.getElementById('select-sp');
+            if (spSelect) currentLineup.sp = parseInt(spSelect.value) || 0;
+
+            for (let i = 1; i <= 9; i++) {
+                const bSelect = document.getElementById(`select-b${i}`);
+                if (bSelect) currentLineup.batters[i - 1] = parseInt(bSelect.value) || 0;
+            }
+            saveGameData();
         }
 
         function toggleTheme() {
@@ -423,15 +500,19 @@
             const t = i18n[currentLang];
             document.getElementById('ui-title').textContent = t.title;
             document.getElementById('ui-money-label').textContent = t.money;
+            document.getElementById('ui-season-label').textContent = t.season.replace('{n}', season);
             document.getElementById('ui-record-label').textContent = t.record;
             document.getElementById('btnViewPlayers').textContent = t.btnViewPlayers;
+            document.getElementById('btnReset').textContent = t.btnReset;
             document.getElementById('tab-btn-game').textContent = t.tabGame;
             document.getElementById('tab-btn-gacha').textContent = t.tabGacha;
             document.getElementById('tab-btn-inventory').textContent = t.tabInventory;
             document.getElementById('ui-lineup-title').textContent = t.lineupTitle;
+            document.getElementById('ui-btn-autofill').textContent = t.btnAutoFill;
             document.getElementById('ui-sp-label').textContent = t.spLabel;
             document.getElementById('ui-sim-title').textContent = t.simTitle;
-            document.getElementById('ui-btn-regular').textContent = t.btnRegular;
+            document.getElementById('ui-btn-regular-1').textContent = t.btnRegular1;
+            document.getElementById('ui-btn-regular-10').textContent = t.btnRegular10;
             document.getElementById('ui-btn-playoff').textContent = t.btnPlayoff;
             document.getElementById('ui-gacha-title').textContent = t.gachaTitle;
             document.getElementById('ui-gacha-sub').textContent = t.gachaSub;
@@ -456,7 +537,7 @@
             resultBox.innerHTML = '';
 
             for (let i = 0; i < count; i++) {
-                const isBatter = Math.random() > 0.4;
+                const isBatter = Math.random() > 0.35;
                 let p = null;
 
                 if (isBatter && allBattersData.length > 0) {
@@ -470,12 +551,11 @@
                 if (p) {
                     const name = p.NAME || Object.values(p)[0] || 'Player';
                     const team = p.TEAM || Object.values(p)[1] || 'Free Agent';
-
-                    const card = createCardDOM(name, team, isBatter);
-                    resultBox.appendChild(card);
+                    resultBox.appendChild(createCardDOM(name, team, isBatter));
                 }
             }
 
+            saveGameData();
             updateUI();
             renderLineupSelects();
         }
@@ -484,7 +564,6 @@
             const t = i18n[currentLang];
             const card = document.createElement('div');
             card.className = `player-card ${isBatter ? 'batter' : 'pitcher'}`;
-
             card.innerHTML = `
                 <div>
                     <span class="card-badge ${isBatter ? 'badge-batter' : 'badge-pitcher'}">
@@ -506,15 +585,17 @@
             myPitchers.forEach((p, idx) => {
                 const name = p.NAME || Object.values(p)[0];
                 const team = p.TEAM || Object.values(p)[1] || '';
-                spSelect.innerHTML += `<option value="${idx}">${name} (${team})</option>`;
+                const selected = idx === currentLineup.sp ? 'selected' : '';
+                spSelect.innerHTML += `<option value="${idx}" ${selected}>${name} (${team})</option>`;
             });
 
             for (let i = 1; i <= 9; i++) {
                 let optionsHtml = '';
+                const currentSelectedIdx = currentLineup.batters[i - 1] ?? ((i - 1) % myBatters.length);
                 myBatters.forEach((b, idx) => {
                     const name = b.NAME || Object.values(b)[0];
                     const team = b.TEAM || Object.values(b)[1] || '';
-                    const selected = (idx === (i - 1) % myBatters.length) ? 'selected' : '';
+                    const selected = (idx === currentSelectedIdx) ? 'selected' : '';
                     optionsHtml += `<option value="${idx}" ${selected}>${name} (${team})</option>`;
                 });
 
@@ -522,59 +603,111 @@
                 group.innerHTML += `
                     <div>
                         <label>${labelText}</label>
-                        <select id="select-b${i}">${optionsHtml}</select>
+                        <select id="select-b${i}" onchange="saveSelectedLineup()">${optionsHtml}</select>
                     </div>
                 `;
             }
         }
 
-        function simulateGame(type) {
+        // 模擬賽事機制（含 162 場限制與季後賽）
+        function simulateGame(count = 1) {
             const t = i18n[currentLang];
-            if (type === 'playoff' && wins < 5) {
-                alert(t.noPlayoff);
+            const totalPlayed = wins + losses;
+
+            if (totalPlayed >= TOTAL_SEASON_GAMES) {
+                alert(t.seasonEnd);
                 return;
             }
 
             const logBox = document.getElementById('gameLog');
-            logBox.innerHTML = `=== ${type === 'playoff' ? '🔥 Playoff' : '⚾ Regular Game'} ===<br>`;
+            if (count === 1) logBox.innerHTML = '';
 
-            let myPower = 50 + (myBatters.length * 2) + Math.floor(Math.random() * 40);
-            let oppPower = type === 'playoff' ? 85 + Math.floor(Math.random() * 30) : 60 + Math.floor(Math.random() * 30);
+            let addedWins = 0;
+            let addedLosses = 0;
 
-            let myScore = 0;
-            let oppScore = 0;
+            const gamesToPlay = Math.min(count, TOTAL_SEASON_GAMES - totalPlayed);
 
-            for (let inning = 1; inning <= 9; inning++) {
-                let myInningRun = Math.random() * myPower > 45 ? Math.floor(Math.random() * 3) : 0;
-                let oppInningRun = Math.random() * oppPower > 45 ? Math.floor(Math.random() * 3) : 0;
+            for (let g = 0; g < gamesToPlay; g++) {
+                let myPower = 50 + (myBatters.length * 1.5) + Math.floor(Math.random() * 30);
+                let oppPower = 60 + Math.floor(Math.random() * 35);
 
-                myScore += myInningRun;
-                oppScore += oppInningRun;
+                let myScore = Math.floor(Math.random() * (myPower / 10));
+                let oppScore = Math.floor(Math.random() * (oppPower / 10));
 
-                if (myInningRun > 0 || oppInningRun > 0) {
-                    logBox.innerHTML += `Inning ${inning}: Team +${myInningRun} | Opponent +${oppInningRun}<br>`;
+                if (myScore === oppScore) {
+                    if (Math.random() > 0.5) myScore += 1;
+                    else oppScore += 1;
+                }
+
+                if (myScore > oppScore) {
+                    wins++;
+                    addedWins++;
+                    userMoney += 150;
+                } else {
+                    losses++;
+                    addedLosses++;
+                    userMoney += 40;
                 }
             }
 
-            if (myScore === oppScore) {
-                myScore += Math.random() > 0.5 ? 1 : 0;
-                oppScore += (myScore === oppScore) ? 1 : 0;
-            }
-
-            logBox.innerHTML += `<br><strong>FINAL SCORE: Team ${myScore} - ${oppScore} Opponent</strong><br>`;
-
-            if (myScore > oppScore) {
-                const reward = type === 'playoff' ? 1000 : 200;
-                wins++;
-                userMoney += reward;
-                logBox.innerHTML += `<span style="color:#10b981;">🎉 WIN! +1 W, Reward +$${reward}!</span><br>`;
-            } else {
-                losses++;
-                userMoney += 50;
-                logBox.innerHTML += `<span style="color:#ef4444;">❌ LOSS! Compensation +$50.</span><br>`;
+            logBox.innerHTML += `⚾ 模擬完成 ${gamesToPlay} 場比賽！獲勝 ${addedWins} 場 / 戰敗 ${addedLosses} 場。<br>`;
+            if (wins + losses >= TOTAL_SEASON_GAMES) {
+                logBox.innerHTML += `<br><span style="color:#f59e0b; font-weight:bold;">🎉 例行賽 162 場全數結束！最終戰績：${wins}勝-${losses}敗。</span><br>`;
             }
 
             logBox.scrollTop = logBox.scrollHeight;
+            saveGameData();
+            updateUI();
+        }
+
+        // 季後賽 (7戰4勝)
+        function startPlayoffs() {
+            const t = i18n[currentLang];
+            if (wins + losses < TOTAL_SEASON_GAMES || wins < 81) {
+                alert(t.notQualified);
+                return;
+            }
+
+            const logBox = document.getElementById('gameLog');
+            logBox.innerHTML = `🔥 === 世界大賽 (季後賽 7 戰 4 勝制) === 🔥<br>`;
+
+            let myPlayoffWins = 0;
+            let oppPlayoffWins = 0;
+            let gameNum = 1;
+
+            while (myPlayoffWins < 4 && oppPlayoffWins < 4) {
+                let myPower = 65 + (myBatters.length * 2) + Math.floor(Math.random() * 30);
+                let oppPower = 80 + Math.floor(Math.random() * 30);
+
+                let myScore = Math.floor(Math.random() * (myPower / 10));
+                let oppScore = Math.floor(Math.random() * (oppPower / 10));
+                if (myScore === oppScore) myScore += 1;
+
+                if (myScore > oppScore) {
+                    myPlayoffWins++;
+                    logBox.innerHTML += `Game ${gameNum}: 🏆 獲勝 (${myScore} - ${oppScore}) [當前 ${myPlayoffWins}-${oppPlayoffWins}]<br>`;
+                } else {
+                    oppPlayoffWins++;
+                    logBox.innerHTML += `Game ${gameNum}: ❌ 戰敗 (${myScore} - ${oppScore}) [當前 ${myPlayoffWins}-${oppPlayoffWins}]<br>`;
+                }
+                gameNum++;
+            }
+
+            if (myPlayoffWins === 4) {
+                userMoney += 3000;
+                logBox.innerHTML += `<br><span style="color:#10b981; font-weight:bold; font-size:16px;">🏆 恭喜勇奪世界大賽總冠軍！獲得冠軍獎金 $3,000！</span><br>`;
+            } else {
+                userMoney += 500;
+                logBox.innerHTML += `<br><span style="color:#ef4444; font-weight:bold;">💔 季後賽遺憾淘汰，獲得亞軍獎勵 $500！</span><br>`;
+            }
+
+            // 進步到下個賽季
+            season++;
+            wins = 0;
+            losses = 0;
+            logBox.innerHTML += `新賽季 (第 ${season} 賽季) 已開啟！例行賽戰績重置。<br>`;
+
+            saveGameData();
             updateUI();
         }
 
@@ -597,7 +730,8 @@
         function updateUI() {
             const t = i18n[currentLang];
             document.getElementById('userMoney').textContent = `$${userMoney.toLocaleString()}`;
-            document.getElementById('userRecord').textContent = `${wins} ${t.win} - ${losses} ${t.loss}`;
+            document.getElementById('seasonNum').textContent = season;
+            document.getElementById('userRecord').textContent = `${wins} ${t.win} - ${losses} ${t.loss} (場次 ${wins + losses}/162)`;
         }
 
         function switchTab(tabId, btn) {
